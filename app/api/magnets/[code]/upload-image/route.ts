@@ -113,25 +113,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const filePath = `memories/${magnet.memory.id}/${safeFileName}`;
 
     const bucketFile = bucket.file(filePath);
-
-    await new Promise<void>((resolve, reject) => {
-      const stream = bucketFile.createWriteStream({
-        resumable: false,
-        metadata: {
-          contentType,
-        },
-      });
-
-      stream.on("error", (err) => {
-        console.error("Stream error:", err);
-        reject(err);
-      });
-
-      stream.on("finish", () => {
-        resolve();
-      });
-
-      stream.end(processedBuffer);
+    
+    await bucketFile.save(processedBuffer, {
+      resumable: false,
+      metadata: {
+        contentType,
+      },
     });
 
     const lastSortOrder =
