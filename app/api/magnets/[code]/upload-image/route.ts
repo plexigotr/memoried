@@ -114,9 +114,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const safeFileName = `${Date.now()}-${originalName}.${extension}`;
     const filePath = `memories/${magnet.memory.id}/${safeFileName}`;
 
-    const tokenResponse = await bucket.storage.authClient.getAccessToken();
-    const token =
-      typeof tokenResponse === "string" ? tokenResponse : tokenResponse?.token;
+    const token = await bucket.storage.authClient.getAccessToken();
 
     if (!token) {
       throw new Error("Failed to get Google Cloud access token.");
