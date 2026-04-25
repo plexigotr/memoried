@@ -5,6 +5,13 @@ const clientEmail = process.env.GOOGLE_CLOUD_CLIENT_EMAIL;
 const privateKey = process.env.GOOGLE_CLOUD_PRIVATE_KEY;
 const bucketName = process.env.GOOGLE_CLOUD_STORAGE_BUCKET;
 
+console.log("GCS ENV CHECK", {
+  hasProjectId: Boolean(projectId),
+  hasClientEmail: Boolean(clientEmail),
+  hasPrivateKey: Boolean(privateKey),
+  hasBucketName: Boolean(bucketName),
+});
+
 if (!projectId || !clientEmail || !privateKey || !bucketName) {
   throw new Error("Google Cloud Storage environment variables are missing.");
 }
