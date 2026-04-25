@@ -116,15 +116,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
 
     
-    const bucketFile = bucket.file(filePath);
+    const [token] = await bucket.storage.authClient.getAccessToken();
 
-    await bucketFile.save(processedBuffer, {
-      resumable: false,
-      validation: false,
-      metadata: {
-        contentType,
+    const uploadUrl =
+      `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(
+        bucket.name
+      )}/o?uploadType=media&name=${encodeURIComponent(filePath)}`;
+
+    const uploadResponse = await fetch(uploadUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": contentType,
+        "Content-Length": String(processedBuffer.length),
       },
-    });  
+      body: processedBuffer,
+    });
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      throw new Error(`GCS REST upload failed: ${uploadResponse.status} ${errorText}`);
+    }
 
     const lastSortOrder =
       magnet.memory.memory_items.sort((a, b) => b.sort_order - a.sort_order)[0]
