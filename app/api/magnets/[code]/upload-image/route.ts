@@ -119,7 +119,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       metadata: {
         contentType,
       },
-    });
+    });    
 
     const lastSortOrder =
       magnet.memory.memory_items.sort((a, b) => b.sort_order - a.sort_order)[0]
@@ -137,12 +137,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
 
     return NextResponse.redirect(new URL(`/m/${code}/edit`, request.url), 303);
-  } catch (error) {
-    console.error("Image upload error:", error);
+} catch (error) {
+  console.error("Image upload error full:", {
+    message: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
+    error,
+  });
 
-    return NextResponse.redirect(
-      new URL(`/m/${code}/edit?error=upload-failed`, request.url),
-      303
-    );
-  }
+  return NextResponse.redirect(
+    new URL(`/m/${code}/edit?error=upload-failed`, request.url),
+    303
+  );
+}
 }
