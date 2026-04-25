@@ -66,19 +66,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-  const bytes = await file.arrayBuffer();
-  const originalBuffer = Buffer.from(bytes);
-  
-  let processedBuffer: Buffer = originalBuffer;
-  let contentType = file.type || "application/octet-stream";
-  let extension = "bin";
+    const bytes = await file.arrayBuffer();
+    const originalBuffer = Buffer.from(bytes);
+
+    let processedBuffer: Buffer = originalBuffer;
+    let contentType = file.type || "application/octet-stream";
+    let extension = "bin";
 
     try {
       const image = sharp(originalBuffer);
       const metadata = await image.metadata();
 
       const maxWidth = 1600;
-
       let resized = image;
 
       if (metadata.width && metadata.width > maxWidth) {
@@ -106,22 +105,26 @@ export async function POST(request: NextRequest, context: RouteContext) {
       extension = originalExtension || "bin";
     }
 
-    const originalName = file.name
-      .replace(/\.[^/.]+$/, "")
-      .replace(/\s+/g, "-")
-      .replace(/[^\w.-]/g, "");
+    const originalName =
+      file.name
+        .replace(/\.[^/.]+$/, "")
+        .replace(/\s+/g, "-")
+        .replace(/[^\w.-]/g, "") || "image";
 
     const safeFileName = `${Date.now()}-${originalName}.${extension}`;
     const filePath = `memories/${magnet.memory.id}/${safeFileName}`;
 
+    const tokenResponse = await bucket.storage.authClient.getAccessToken();
+    const token =
+      typeof tokenResponse === "string" ? tokenResponse : tokenResponse?.token;
 
-    
-    const [token] = await bucket.storage.authClient.getAccessToken();
+    if (!token) {
+      throw new Error("Failed to get Google Cloud access token.");
+    }
 
-    const uploadUrl =
-      `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(
-        bucket.name
-      )}/o?uploadType=media&name=${encodeURIComponent(filePath)}`;
+    const uploadUrl = `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(
+      bucket.name
+    )}/o?uploadType=media&name=${encodeURIComponent(filePath)}`;
 
     const uploadResponse = await fetch(uploadUrl, {
       method: "POST",
@@ -135,7 +138,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text();
-      throw new Error(`GCS REST upload failed: ${uploadResponse.status} ${errorText}`);
+
+      throw new Error(
+        `GCS REST upload failed: ${uploadResponse.status} ${errorText}`
+      );
     }
 
     const lastSortOrder =
@@ -154,16 +160,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
 
     return NextResponse.redirect(new URL(`/m/${code}/edit`, request.url), 303);
-} catch (error) {
-  console.error("Image upload error full:", {
-    message: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined,
-    error,
-  });
+  } catch (error) {
+    console.error("Image upload error full:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      error,
+    });
 
-  return NextResponse.redirect(
-    new URL(`/m/${code}/edit?error=upload-failed`, request.url),
-    303
-  );
-}
+    return NextResponse.redirect(
+      new URL(`/m/${code}/edit?error=upload-failed`, request.url),
+      303
+    );
+  }
 }
