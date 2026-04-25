@@ -84,11 +84,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
         });
       }
 
-      processedBuffer = await resized
-        .webp({
-          quality: 80,
-        })
-        .toBuffer();
+      processedBuffer = Buffer.from(
+        await resized
+          .webp({
+            quality: 80,
+          })
+          .toBuffer()
+      )
     } catch (err) {
       console.error("Image optimization error:", err);
       processedBuffer = originalBuffer;
