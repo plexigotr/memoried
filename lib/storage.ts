@@ -28,3 +28,7 @@ export async function getSignedImageUrl(filePath: string) {
 
   return url;
 }
+
+export async function getSignedMediaUrl(filePath: string) {
+  return getSignedImageUrl(filePath);
+}
