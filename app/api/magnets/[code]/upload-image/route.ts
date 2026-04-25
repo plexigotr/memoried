@@ -114,14 +114,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const safeFileName = `${Date.now()}-${originalName}.${extension}`;
     const filePath = `memories/${magnet.memory.id}/${safeFileName}`;
 
-    const bucketFile = bucket.file(filePath);
+
     
+    const bucketFile = bucket.file(filePath);
+
     await bucketFile.save(processedBuffer, {
       resumable: false,
+      validation: false,
       metadata: {
         contentType,
       },
-    });    
+    });  
 
     const lastSortOrder =
       magnet.memory.memory_items.sort((a, b) => b.sort_order - a.sort_order)[0]
