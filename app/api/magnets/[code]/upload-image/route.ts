@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { bucket } from "@/lib/storage";
 import sharp from "sharp";
 
+export const runtime = "nodejs";
+
 type RouteContext = {
   params: Promise<{
     code: string;
