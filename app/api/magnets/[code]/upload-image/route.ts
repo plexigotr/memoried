@@ -68,6 +68,8 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const originalBuffer = Buffer.from(bytes);
 
     let processedBuffer = originalBuffer;
+    let contentType = file.type || "application/octet-stream";
+    let extension = "bin";
 
     try {
       const image = sharp(originalBuffer);
@@ -84,20 +86,30 @@ export async function POST(request: NextRequest, context: RouteContext) {
         });
       }
 
-      processedBuffer = Buffer.from(
-        await resized
-          .webp({
-            quality: 80,
-          })
-          .toBuffer()
-      );
+      processedBuffer = await resized
+        .webp({
+          quality: 80,
+        })
+        .toBuffer();
+
+      contentType = "image/webp";
+      extension = "webp";
     } catch (err) {
       console.error("Image optimization error:", err);
+
       processedBuffer = originalBuffer;
+      contentType = file.type || "application/octet-stream";
+
+      const originalExtension = file.name.split(".").pop();
+      extension = originalExtension || "bin";
     }
 
-    const originalName = file.name.replace(/\s+/g, "-").replace(/[^\w.-]/g, "");
-    const safeFileName = `${Date.now()}-${originalName}.webp`;
+    const originalName = file.name
+      .replace(/\.[^/.]+$/, "")
+      .replace(/\s+/g, "-")
+      .replace(/[^\w.-]/g, "");
+
+    const safeFileName = `${Date.now()}-${originalName}.${extension}`;
     const filePath = `memories/${magnet.memory.id}/${safeFileName}`;
 
     const bucketFile = bucket.file(filePath);
@@ -106,19 +118,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
       const stream = bucketFile.createWriteStream({
         resumable: false,
         metadata: {
-          contentType: "image/webp",
+          contentType,
         },
       });
-    
+
       stream.on("error", (err) => {
         console.error("Stream error:", err);
         reject(err);
       });
-    
+
       stream.on("finish", () => {
         resolve();
       });
-    
+
       stream.end(processedBuffer);
     });
 
