@@ -55,7 +55,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       magnet.user?.premium_until &&
       magnet.user.premium_until > new Date();
 
-    let maxPhotos = isPremium ? 30 : 10;
+    const maxPhotos = isPremium ? 30 : 10;
 
     if (imageCount >= maxPhotos) {
       return NextResponse.redirect(
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
             quality: 80,
           })
           .toBuffer()
-      )
+      );
     } catch (err) {
       console.error("Image optimization error:", err);
       processedBuffer = originalBuffer;
@@ -103,13 +103,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const bucketFile = bucket.file(filePath);
 
     await bucketFile.save(processedBuffer, {
-      contentType: "image/webp",
       resumable: false,
+      validation: false,
+      metadata: {
+        contentType: "image/webp",
+      },
     });
 
     const lastSortOrder =
-      magnet.memory.memory_items
-        .sort((a, b) => b.sort_order - a.sort_order)[0]?.sort_order ?? 0;
+      magnet.memory.memory_items.sort((a, b) => b.sort_order - a.sort_order)[0]
+        ?.sort_order ?? 0;
 
     await prisma.memory_items.create({
       data: {
