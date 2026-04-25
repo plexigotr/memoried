@@ -131,7 +131,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         "Content-Type": contentType,
         "Content-Length": String(processedBuffer.length),
       },
-      body: processedBuffer,
+      body: new Uint8Array(processedBuffer),
     });
 
     if (!uploadResponse.ok) {
