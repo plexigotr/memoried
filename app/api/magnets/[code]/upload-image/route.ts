@@ -102,12 +102,24 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const bucketFile = bucket.file(filePath);
 
-    await bucketFile.save(processedBuffer, {
-      resumable: false,
-      validation: false,
-      metadata: {
-        contentType: "image/webp",
-      },
+    await new Promise<void>((resolve, reject) => {
+      const stream = bucketFile.createWriteStream({
+        resumable: false,
+        metadata: {
+          contentType: "image/webp",
+        },
+      });
+    
+      stream.on("error", (err) => {
+        console.error("Stream error:", err);
+        reject(err);
+      });
+    
+      stream.on("finish", () => {
+        resolve();
+      });
+    
+      stream.end(processedBuffer);
     });
 
     const lastSortOrder =
