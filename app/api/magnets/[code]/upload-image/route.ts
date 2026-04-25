@@ -64,12 +64,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const originalBuffer = Buffer.from(bytes);
-
-    let processedBuffer = originalBuffer;
-    let contentType = file.type || "application/octet-stream";
-    let extension = "bin";
+  const bytes = await file.arrayBuffer();
+  const originalBuffer = Buffer.from(bytes);
+  
+  let processedBuffer: Buffer = originalBuffer;
+  let contentType = file.type || "application/octet-stream";
+  let extension = "bin";
 
     try {
       const image = sharp(originalBuffer);
