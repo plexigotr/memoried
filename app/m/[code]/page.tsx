@@ -476,14 +476,15 @@ export default async function MagnetPage({
                     key={item.id.toString()}
                     className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm"
                   >
-                  <div className="overflow-hidden rounded-2xl">
-                    <video
-                      controls
-                      src={item.url}
-                      poster={`${item.url}#t=2`}
-                      className="w-full"
-                    />
-                  </div>
+                    <div className="overflow-hidden rounded-2xl">
+                      <video
+                        controls
+                        src={item.signedUrl}
+                        poster={`${item.signedUrl}#t=2`}
+                        className="w-full"
+                      />
+                    </div>
+
                     {itemTitle ? (
                       <div className="p-5">
                         <h2 className="text-lg font-medium text-stone-900">
