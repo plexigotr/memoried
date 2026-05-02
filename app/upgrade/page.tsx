@@ -30,7 +30,7 @@ export default async function UpgradePage({ searchParams }: UpgradePageProps) {
     note:
       currentLang === "en"
         ? "Payment integration will be connected when the project goes live."
-        : "Ödeme entegrasyonu canlıya çıkınca bağlanacak.",
+        : "Butona bastığında güvenli iyzico ödeme sayfasına yönlendirileceksin.",
   };
 
   return (
@@ -94,7 +94,7 @@ export default async function UpgradePage({ searchParams }: UpgradePageProps) {
               <li>✓ {currentLang === "en" ? "Premium story experience" : "Premium story deneyimi"}</li>
             </ul>
 
-            <form action="/api/users/upgrade" method="POST" className="mt-8">
+            <form action="/api/payments/iyzico/initialize" method="POST" className="mt-8">
               <input type="hidden" name="userId" value={userId || ""} />
               <input type="hidden" name="code" value={code || ""} />
               <input type="hidden" name="lang" value={currentLang} />

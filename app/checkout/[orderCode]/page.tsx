@@ -3,23 +3,42 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 
 type CheckoutPageProps = {
-  params: Promise<{
-    orderCode: string;
-  }>;
+  params: Promise<{ orderCode: string }>;
+  searchParams: Promise<{ payment?: string; error?: string }>;
 };
 
-export default async function CheckoutPage({ params }: CheckoutPageProps) {
+function getStatusLabel(status: string) {
+  if (status === "paid") return "Ödendi";
+  if (status === "payment_started") return "Ödeme başlatıldı";
+  if (status === "payment_failed") return "Ödeme başarısız";
+  return "Ödeme bekliyor";
+}
+
+function getErrorMessage(error?: string) {
+  if (!error) return null;
+
+  const messages: Record<string, string> = {
+    "payment-init-failed": "Ödeme başlatılamadı. Lütfen tekrar dene.",
+    "payment-failed": "Ödeme tamamlanamadı. Kart bilgilerini kontrol edip tekrar deneyebilirsin.",
+    "payment-callback-invalid": "Ödeme sonucu doğrulanamadı.",
+    "payment-callback-failed": "Ödeme sonucu kontrol edilirken hata oluştu.",
+  };
+
+  return messages[error] || "Ödeme sırasında bir hata oluştu.";
+}
+
+export default async function CheckoutPage({ params, searchParams }: CheckoutPageProps) {
   const { orderCode } = await params;
+  const { payment, error } = await searchParams;
 
   const order = await prisma.orders.findUnique({
-    where: {
-      order_code: orderCode,
-    },
+    where: { order_code: orderCode },
   });
 
-  if (!order) {
-    notFound();
-  }
+  if (!order) notFound();
+
+  const isPaid = order.status === "paid" || payment === "success";
+  const errorMessage = getErrorMessage(error);
 
   return (
     <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
@@ -28,40 +47,55 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
           Memoried
         </p>
 
-        <h1 className="text-3xl font-semibold">Sipariş oluşturuldu</h1>
+        <h1 className="text-3xl font-semibold">
+          {isPaid ? "Ödemen alındı" : "Sipariş oluşturuldu"}
+        </h1>
 
-        <p className="mt-4 text-sm leading-6 text-stone-600">
-          Sipariş kodun:
-        </p>
+        <p className="mt-4 text-sm text-stone-600">Sipariş kodun:</p>
 
         <p className="mt-2 rounded-2xl bg-stone-100 px-4 py-3 font-medium">
           {order.order_code}
         </p>
 
         <div className="mt-6 space-y-2 text-sm text-stone-700">
-          <p>
-            <strong>Ürün:</strong> {order.product_name}
-          </p>
-          <p>
-            <strong>Yazı:</strong>{" "}
-            {order.custom_text || order.variant_text || "-"}
-          </p>
-          <p>
-            <strong>Tutar:</strong> ₺{order.price.toString()}
-          </p>
-          <p>
-            <strong>Durum:</strong> {order.status}
-          </p>
+          <p><strong>Ürün:</strong> {order.product_name}</p>
+          <p><strong>Yazı:</strong> {order.custom_text || order.variant_text || "-"}</p>
+          <p><strong>Tutar:</strong> ₺{order.price.toString()}</p>
+          <p><strong>Durum:</strong> {getStatusLabel(order.status)}</p>
         </div>
 
-        <p className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-          Bir sonraki adımda bu sayfadaki ödeme butonunu iyzico ödeme sayfasına
-          bağlayacağız.
-        </p>
+        {isPaid && (
+          <p className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+            Harika, ödeme başarıyla tamamlandı.
+          </p>
+        )}
+
+        {errorMessage && (
+          <p className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {errorMessage}
+          </p>
+        )}
+
+        {!isPaid && (
+          <form action="/api/payments/iyzico/initialize" method="POST" className="mt-6">
+            <input type="hidden" name="orderCode" value={order.order_code} />
+
+            <button
+              type="submit"
+              className="w-full rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            >
+              İyzico ile Güvenli Ödeme Yap
+            </button>
+
+            <p className="mt-3 text-center text-xs text-stone-500">
+              Butona bastığında güvenli iyzico ödeme sayfasına yönlendirileceksin.
+            </p>
+          </form>
+        )}
 
         <Link
           href="/shop"
-          className="mt-6 inline-block rounded-full bg-stone-900 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
+          className="mt-6 inline-block rounded-full border border-stone-300 px-6 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
         >
           Yeni Sipariş Oluştur
         </Link>
