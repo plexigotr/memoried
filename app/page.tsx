@@ -19,7 +19,9 @@ export default function HomePage() {
 
         <div className="flex flex-col gap-4 sm:flex-row">
           <button className="rounded-full bg-stone-900 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90">
+          <a href="/shop" ...>
             Başlayalım
+          </a>          
           </button>
 
           <button className="rounded-full border border-stone-300 px-6 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-100">
