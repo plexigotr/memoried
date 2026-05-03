@@ -156,7 +156,9 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      return NextResponse.redirect(result.paymentPageUrl);
+      return NextResponse.json({
+        paymentPageUrl: result.paymentPageUrl,
+      });
     }
 
     /**
