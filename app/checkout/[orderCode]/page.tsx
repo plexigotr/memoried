@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import PaymentButton from "./PaymentButton";
 
 type CheckoutPageProps = {
   params: Promise<{ orderCode: string }>;
@@ -77,20 +78,13 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
         )}
 
         {!isPaid && (
-          <form action="/api/payments/iyzico/initialize" method="POST" className="mt-6">
-            <input type="hidden" name="orderCode" value={order.order_code} />
-
-            <button
-              type="submit"
-              className="w-full rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-            >
-              İyzico ile Güvenli Ödeme Yap
-            </button>
+          <div className="mt-6">
+            <PaymentButton orderCode={order.order_code} />
 
             <p className="mt-3 text-center text-xs text-stone-500">
               Butona bastığında güvenli iyzico ödeme sayfasına yönlendirileceksin.
             </p>
-          </form>
+          </div>
         )}
 
         <Link

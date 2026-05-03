@@ -241,7 +241,9 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      return NextResponse.redirect(result.paymentPageUrl);
+      return NextResponse.json({
+        paymentPageUrl: result.paymentPageUrl,
+      });
     }
 
     return NextResponse.redirect(`${baseUrl}/shop?error=missing-payment-target`);
