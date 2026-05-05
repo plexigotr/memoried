@@ -50,11 +50,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const giftPackage =
+      formData.get("giftPackage")?.toString() === "yes" ? "yes" : "no";    
+
     const order = await prisma.orders.create({
       data: {
         order_code: createOrderCode(),
         status: "pending",
         package_type: packageType,
+        gift_package: giftPackage,
+
+      
 
         product_name: `Memoried Stone - ${selectedPackage.name}`,
         variant_text: variantText,

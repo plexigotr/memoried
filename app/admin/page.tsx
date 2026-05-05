@@ -196,6 +196,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <th className="px-4 py-3">Sipariş</th>
                     <th className="px-4 py-3">Paket</th>
                     <th className="px-4 py-3">Yazı</th>
+                    <th className="px-4 py-3">Hediye</th>
                     <th className="px-4 py-3">Tutar</th>
                     <th className="px-4 py-3">Durum</th>
                     <th className="px-4 py-3">Tarih</th>
@@ -218,6 +219,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
                       <td className="px-4 py-4 text-stone-700">
                         {order.custom_text || "-"}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        {order.gift_package === "yes" ? (
+                          <span className="rounded-full bg-pink-100 px-3 py-1 text-xs font-medium text-pink-700">
+                            İstiyor
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-500">
+                            İstemiyor
+                          </span>
+                        )}
                       </td>
 
                       <td className="px-4 py-4 font-medium text-stone-900">
@@ -263,6 +276,21 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                         ) : (
                           <span className="text-xs text-stone-400">Tamamlandı</span>
                         )}
+
+                        <form
+                          action="/api/admin/orders/delete"
+                          method="POST"
+                          className="mt-2"
+                        >
+                          <input type="hidden" name="orderCode" value={order.order_code} />
+
+                          <button
+                            type="submit"
+                            className="rounded-full bg-red-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-red-700"
+                          >
+                            Sil
+                          </button>
+                        </form>
                       </td>
                     </tr>
                   ))}

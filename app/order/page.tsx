@@ -79,7 +79,6 @@ export default function OrderPage() {
         className="mt-10 rounded-[2.5rem] border border-white/70 bg-white/75 p-6 shadow-[0_40px_100px_rgba(120,90,60,0.16)] backdrop-blur-xl"
         >
         <input type="hidden" name="customerName" value="Shopier Müşterisi" />
-        <input type="hidden" name="phoneNumber" value="05000000000" />
         <input type="hidden" name="email" value="" />
         <input type="hidden" name="address" value="Shopier üzerinden alınacak" />
         <input type="hidden" name="city" value="Shopier" />
@@ -89,7 +88,17 @@ export default function OrderPage() {
         <input type="hidden" name="packageType" value={selectedPackage} />
 
          
-
+            <div>
+              <label className="text-xs uppercase tracking-[0.25em] text-stone-400">
+                Telefon numarası
+              </label>
+              <input
+                name="phoneNumber"
+                required
+                placeholder="05XX XXX XX XX"
+                className="mt-2 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none focus:border-stone-400"
+              />
+            </div>
             <div>
               <label className="text-xs uppercase tracking-[0.25em] text-stone-400">
                 Magnet üzerindeki yazı
