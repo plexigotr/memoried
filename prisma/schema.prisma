@@ -41,6 +41,8 @@ model orders {
   order_code       String   @unique @db.VarChar(50)
   status           String   @default("pending") @db.VarChar(30)
 
+  package_type String @default("starter") @db.VarChar(30)
+
   product_name     String   @db.VarChar(255)
   variant_text     String?  @db.VarChar(100)
   custom_text      String?  @db.VarChar(100)
