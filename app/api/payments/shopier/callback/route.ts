@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
       return new NextResponse("invalid hash", { status: 403 });
     }
 
-    const json = Buffer.from(res, "base64").toString("utf8");
-    const data = JSON.parse(json);
+    const decoded = Buffer.from(res, "base64").toString("utf8");
+    const data = JSON.parse(decoded);
 
     const orderCode = data.orderid;
 

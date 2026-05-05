@@ -48,7 +48,9 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json({
-    paymentUrl,
-  });
+    const finalUrl = `${paymentUrl}?orderid=${encodeURIComponent(orderCode)}`;
+
+    return NextResponse.json({
+    paymentUrl: finalUrl,
+    });
 }
