@@ -36,6 +36,12 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     },
     });
 
+    const orders = await prisma.orders.findMany({
+      orderBy: {
+        created_at: "desc",
+      },
+    });    
+
   return (
     <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
       <section className="mx-auto max-w-7xl">
@@ -55,6 +61,18 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               Magnet başarıyla sıfırlandı.
             </div>
           )}
+
+          {success === "order-paid" && (
+            <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              Sipariş ödendi olarak işaretlendi.
+            </div>
+          )}
+
+          {error === "order-paid-failed" && (
+            <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              Sipariş güncellenirken bir sorun oluştu.
+            </div>
+          )}          
 
           {error === "reset-failed" && (
             <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -154,6 +172,108 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               </button>
             </div>
           </form>
+        </section>
+
+        <section className="mb-8 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-medium">Sipariş Yönetimi</h2>
+              <p className="mt-1 text-sm text-stone-500">
+                Shopier ödemelerini kontrol ettikten sonra siparişi manuel olarak ödendi yapabilirsin.
+              </p>
+            </div>
+
+            <span className="rounded-full bg-stone-100 px-4 py-2 text-xs text-stone-600">
+              Toplam sipariş: {orders.length}
+            </span>
+          </div>
+
+          {orders.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-stone-100 text-stone-700">
+                  <tr>
+                    <th className="px-4 py-3">Sipariş</th>
+                    <th className="px-4 py-3">Paket</th>
+                    <th className="px-4 py-3">Yazı</th>
+                    <th className="px-4 py-3">Tutar</th>
+                    <th className="px-4 py-3">Durum</th>
+                    <th className="px-4 py-3">Tarih</th>
+                    <th className="px-4 py-3">İşlem</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {orders.map((order) => (
+                    <tr key={order.id.toString()} className="border-t border-stone-200">
+                      <td className="px-4 py-4 font-medium text-stone-900">
+                        {order.order_code}
+                      </td>
+
+                      <td className="px-4 py-4 text-stone-700">
+                        {order.package_type === "premium"
+                          ? "Premium Paket"
+                          : "Başlangıç Paketi"}
+                      </td>
+
+                      <td className="px-4 py-4 text-stone-700">
+                        {order.custom_text || "-"}
+                      </td>
+
+                      <td className="px-4 py-4 font-medium text-stone-900">
+                        ₺{order.price.toString()}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        {order.status === "paid" ? (
+                          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                            Ödendi
+                          </span>
+                        ) : order.status === "payment_started" ? (
+                          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
+                            Ödeme Başladı
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-600">
+                            Bekliyor
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-4 text-stone-600">
+                        {new Date(order.created_at).toLocaleString("tr-TR")}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        {order.status !== "paid" ? (
+                          <form action="/api/admin/orders/mark-paid" method="POST">
+                            <input
+                              type="hidden"
+                              name="orderCode"
+                              value={order.order_code}
+                            />
+
+                            <button
+                              type="submit"
+                              className="rounded-full bg-green-600 px-4 py-2 text-xs font-medium text-white transition hover:bg-green-700"
+                            >
+                              Ödeme Alındı
+                            </button>
+                          </form>
+                        ) : (
+                          <span className="text-xs text-stone-400">Tamamlandı</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-6 text-center text-sm text-stone-500">
+              Henüz sipariş yok.
+            </p>
+          )}
         </section>
 
         {magnets.length > 0 ? (
