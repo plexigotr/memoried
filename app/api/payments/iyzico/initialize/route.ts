@@ -62,13 +62,20 @@ export async function POST(req: NextRequest) {
       });
 
       if (!order) {
-        return NextResponse.redirect(`${baseUrl}/shop?error=order-not-found`);
+        return NextResponse.json(
+          {
+            error: "order-not-found",
+            message: "Sipariş bulunamadı.",
+            redirectUrl: "/shop?error=order-not-found",
+          },
+          { status: 404 }
+        );
       }
 
       if (order.status === "paid") {
-        return NextResponse.redirect(
-          `${baseUrl}/checkout/${order.order_code}?payment=success`
-        );
+        return NextResponse.json({
+          redirectUrl: `/checkout/${order.order_code}?payment=success`,
+        });
       }
 
       const buyerName = splitName(order.customer_name);
@@ -141,8 +148,13 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        return NextResponse.redirect(
-          `${baseUrl}/checkout/${order.order_code}?error=payment-init-failed`
+        return NextResponse.json(
+          {
+            error: "payment-init-failed",
+            message: result.errorMessage || "Ödeme başlatılamadı. Lütfen tekrar dene.",
+            redirectUrl: `/checkout/${order.order_code}?error=payment-init-failed`,
+          },
+          { status: 502 }
         );
       }
 
@@ -236,7 +248,7 @@ export async function POST(req: NextRequest) {
         uri: "/payment/iyzipos/checkoutform/initialize/auth/ecom",
         payload,
       });
-
+      console.log("IYZICO RESULT:", result);
       if (result.status !== "success" || !result.paymentPageUrl) {
         return NextResponse.redirect(
           `${baseUrl}/upgrade?userId=${user.id.toString()}&code=${code || ""}&lang=${lang}&error=payment-init-failed`
@@ -248,12 +260,24 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.redirect(`${baseUrl}/shop?error=missing-payment-target`);
+    return NextResponse.json(
+      {
+        error: "missing-payment-target",
+        message: "Ödeme hedefi bulunamadı.",
+        redirectUrl: "/shop?error=missing-payment-target",
+      },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("iyzico initialize error:", error);
 
-    return NextResponse.redirect(
-      `${getBaseUrl()}/shop?error=payment-init-failed`
+    return NextResponse.json(
+      {
+        error: "payment-init-failed",
+        message: "Ödeme başlatılamadı. Sunucu ayarlarını ve Iyzico bilgilerini kontrol et.",
+        redirectUrl: "/shop?error=payment-init-failed",
+      },
+      { status: 500 }
     );
   }
 }

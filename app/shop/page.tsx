@@ -1,212 +1,179 @@
-const variants = ["HATIRLA.", "REMEMBER THIS.", "A MOMENT.", "ÖZEL METİN"];
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
 
 export default function ShopPage() {
+
+  const [open, setOpen] = useState(false);
+
   return (
-    <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
-      <section className="mx-auto max-w-6xl">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1fr]">
-          <div>
-            <p className="mb-3 text-sm uppercase tracking-[0.3em] text-stone-500">
-              Memoried
-            </p>
+    <main className="min-h-screen overflow-hidden bg-[#f7f2eb] text-stone-900">
+      {/* HERO */}
+      <section className="relative px-6 pb-12 pt-16 text-center">
+        <div className="absolute left-1/2 top-0 h-80 w-80 -translate-x-1/2 rounded-full bg-white/60 blur-3xl" />
 
-            <h1 className="text-4xl font-semibold md:text-6xl">
-              NFC taş magnet ile anını dijitale taşı
-            </h1>
+        <div className="relative mx-auto max-w-xl">
+          <p className="text-xs uppercase tracking-[0.45em] text-stone-400">
+            Memoried
+          </p>
 
-            <p className="mt-5 max-w-xl text-base leading-7 text-stone-600">
-              5x8 cm taş magnet. NFC özelliği sayesinde telefonunu yaklaştır,
-              fotoğraf, video, ses ve notlardan oluşan kişisel anı sayfan açılsın.
-            </p>
+          <h1 className="mt-5 text-6xl font-semibold leading-[0.95] tracking-[-0.06em]">
+            Anılarına dokun.
+          </h1>
 
-            <div className="mt-8 overflow-hidden rounded-[2rem] border border-stone-200 bg-white p-4 shadow-sm">
-              <div className="aspect-[5/4] rounded-[1.5rem] bg-gradient-to-br from-stone-200 to-stone-100 p-6">
-                <div className="flex h-full items-center justify-center rounded-3xl border border-stone-300 bg-stone-100 text-center shadow-inner">
-                  <div>
-                    <p className="text-sm uppercase tracking-[0.35em] text-stone-500">
-                      Memoried
-                    </p>
-                    <p className="mt-4 text-3xl font-semibold">HATIRLA.</p>
-                    <p className="mt-4 text-xs text-stone-500">
-                      5x8 cm • NFC taş magnet
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <p className="mx-auto mt-5 max-w-md text-base leading-7 text-stone-600">
+            Anılarını yalnızca saklama. Onları dokunulabilir, kalıcı ve
+            tekrar yaşanabilir bir objeye dönüştür.
+          </p>
 
-          <form
-            action="/api/orders/create"
-            method="POST"
-            className="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm"
-          >
-            <div className="mb-6">
-              <p className="text-sm uppercase tracking-[0.25em] text-stone-400">
-                Sipariş Formu
-              </p>
-              <h2 className="mt-2 text-3xl font-semibold">₺399,00</h2>
-              <p className="mt-2 text-sm text-stone-500">
-                NFC taş magnet + temel dijital anı sayfası dahildir.
-              </p>
-            </div>
+        </div>
+      </section>
 
-            <div className="space-y-5">
+      {/* PRODUCT CARD */}
+      <section className="px-6 pb-16">
+        <div className="mx-auto max-w-md rounded-[2.75rem] border border-white/70 bg-white/75 p-5 shadow-[0_40px_100px_rgba(120,90,60,0.18)] backdrop-blur-xl">
+        <div className="w-full h-[420px] object-cover rounded-[2.25rem] drop-shadow-xl transition duration-500 hover:scale-[1.02]">
+          <img
+            src="/magnet.png"
+            alt="Memoried Doğal Taş Anı Magneti"
+            className="w-full h-[420px] object-cover rounded-[2.25rem] drop-shadow-xl"
+          />
+        </div>
+
+          <div className="px-2 pb-2 pt-7">
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">
-                  Magnet Yazısı
-                </label>
-                <select
-                  name="variantText"
-                  className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                  required
-                >
-                  {variants.map((variant) => (
-                    <option key={variant} value={variant}>
-                      {variant}
-                    </option>
-                  ))}
-                </select>
+                <p className="text-xs uppercase tracking-[0.3em] text-stone-400">
+                  Doğal Taş Anı Magneti
+                </p>
+
+                <h2 className="mt-2 text-2xl font-semibold leading-tight">
+                  Memoried Stone
+                </h2>
               </div>
 
+              <p className="whitespace-nowrap rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-500">
+                Limited
+              </p>
+            </div>
+
+            <p className="mt-4 text-sm leading-6 text-stone-600">
+              Fotoğraf, video, yazı ve ses kayıtlarını tek bir zarif hikâyede
+              saklayan NFC’li anı objesi.
+            </p>
+
+            <div className="mt-6 flex items-end justify-between">
               <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">
-                  Özel Metin
-                </label>
-                <input
-                  type="text"
-                  name="customText"
-                  maxLength={40}
-                  placeholder="Örn. Alaçatı 2026"
-                  className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                />
-                <p className="mt-2 text-xs text-stone-500">
-                  Özel metin seçtiysen buraya yaz. Maksimum 40 karakter.
+                <p className="text-xs text-stone-400">Başlangıç fiyatı</p>
+                <p className="text-3xl font-semibold tracking-tight">
+                  ₺749.90
                 </p>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    Ad Soyad
-                  </label>
-                  <input
-                    type="text"
-                    name="customerName"
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    Telefon
-                  </label>
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    placeholder="+905..."
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">
-                  E-posta
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">
-                  Adres
-                </label>
-                <textarea
-                  name="address"
-                  rows={3}
-                  className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                  required
-                />
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-3">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    İl
-                  </label>
-                  <input
-                    type="text"
-                    name="city"
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    İlçe
-                  </label>
-                  <input
-                    type="text"
-                    name="district"
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    Posta Kodu
-                  </label>
-                  <input
-                    type="text"
-                    name="postalCode"
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    TC No
-                  </label>
-                  <input
-                    type="text"
-                    name="identityNumber"
-                    placeholder="Bireysel fatura için"
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    Vergi No
-                  </label>
-                  <input
-                    type="text"
-                    name="taxNumber"
-                    placeholder="Kurumsal fatura için"
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none focus:border-stone-500"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full rounded-full bg-stone-900 px-6 py-4 text-sm font-semibold text-white transition hover:opacity-90"
-              >
-                Ödemeye Geç
-              </button>
+              <p className="text-right text-xs leading-5 text-stone-500">
+                Bir kez oluştur.
+                <br />
+                Her dokunuşta yeniden yaşa.
+              </p>
             </div>
-          </form>
+
+            <Link
+              href="/order"
+              className="mt-7 block w-full rounded-full bg-stone-950 px-6 py-4 text-center text-sm font-semibold tracking-[0.08em] text-white transition duration-300 hover:-translate-y-0.5 hover:shadow-2xl"
+            >
+              Satın Al
+            </Link>
+
+            <p className="mt-4 text-center text-[11px] text-stone-400">
+              NFC destekli Doğal Taş Magnet ve Kişisel anı sayfası
+            </p>
+          </div>
         </div>
       </section>
+
+      <section className="px-6 pb-16">
+        <div
+          onClick={() => setOpen(true)}
+          className="mx-auto max-w-md cursor-zoom-in rounded-[2.75rem] border border-white/70 bg-white/75 p-3 shadow-[0_40px_100px_rgba(120,90,60,0.18)] backdrop-blur-xl"
+        >
+          <div className="w-full overflow-hidden rounded-[2.25rem]">
+            <img
+              src="/memoried-shop-info.png"
+              alt="Memoried detay"
+              className="w-full h-auto object-contain"
+            />
+          </div>
+        </div>
+
+        {/* FULLSCREEN MODAL */}
+        {open && (
+          <div
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md"
+          >
+            <img
+              src="/memoried-shop-info.png"
+              alt="Memoried büyük"
+              className="max-h-[90vh] max-w-[90vw] rounded-2xl shadow-2xl"
+            />
+          </div>
+        )}
+      </section>
+      <section className="px-6 pb-16">
+        <div className="mx-auto max-w-md rounded-[2.5rem] border border-stone-200/60 bg-white/60 p-8 text-center backdrop-blur">
+
+          <h3 className="text-3xl font-semibold leading-tight">
+            Bazı anlar kaybolmamalı.
+          </h3>
+
+          <p className="mt-5 text-sm leading-7 text-stone-600">
+            Memoried, sevdiğin anıları fiziksel bir objeye dönüştürür.
+            Fotoğraf, video, yazı ve ses kayıtların tek bir hikâyede saklanır.
+            Magneti telefonuna dokundurduğunda, o ana geri dönersin.
+          </p>
+
+          <div className="mt-8 space-y-3 text-sm text-stone-700">
+            <p>Telefonuna dokun — anıların anında açılır</p>
+            <p>Hepsi tek bir yerde, tek bir dokunuşla</p>
+            <p>Fiziksel bir obje olarak her zaman yanında</p>
+            <p>Unutulmayacak bir hediye deneyimi</p>
+          </div>
+
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="px-6 pb-16">
+        <div className="mx-auto max-w-md">
+          <h3 className="text-center text-2xl font-semibold">Nasıl çalışır?</h3>
+
+          <div className="mt-7 space-y-3">
+            {[
+              ["01", "Magneti telefonuna dokundur"],
+              ["02", "Anı sayfanı oluştur"],
+              ["03", "Fotoğraf, video, yazı ve seslerini ekle"],
+              ["04", "Her dokunuşta hikâyen açılsın"],
+            ].map(([number, text]) => (
+              <div
+                key={number}
+                className="flex items-center gap-4 rounded-3xl border border-stone-200 bg-white/70 p-4 shadow-sm"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-stone-950 text-xs font-semibold text-white">
+                  {number}
+                </span>
+
+                <p className="text-sm text-stone-700">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+     
+      <footer className="px-6 pb-10 text-center text-[10px] uppercase tracking-[0.45em] text-stone-400">
+        Memoried © 2026
+      </footer>
     </main>
   );
 }
