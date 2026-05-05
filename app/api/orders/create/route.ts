@@ -54,6 +54,7 @@ export async function POST(request: NextRequest) {
       data: {
         order_code: createOrderCode(),
         status: "pending",
+        package_type: packageType,
 
         product_name: `Memoried Stone - ${selectedPackage.name}`,
         variant_text: variantText,
