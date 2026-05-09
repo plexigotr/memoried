@@ -174,19 +174,27 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </form>
         </section>
 
-        <section className="mb-8 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-medium">Sipariş Yönetimi</h2>
-              <p className="mt-1 text-sm text-stone-500">
-                Shopier ödemelerini kontrol ettikten sonra siparişi manuel olarak ödendi yapabilirsin.
-              </p>
-            </div>
+        <details className="mb-8 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-medium">Sipariş Yönetimi</h2>
+            <p className="mt-1 text-sm text-stone-500">
+              Shopier ödemelerini kontrol ettikten sonra siparişi manuel olarak ödendi yapabilirsin.
+            </p>
+          </div>
 
+          <div className="flex items-center gap-3">
             <span className="rounded-full bg-stone-100 px-4 py-2 text-xs text-stone-600">
               Toplam sipariş: {orders.length}
             </span>
+
+            <span className="rounded-full border border-stone-200 px-4 py-2 text-xs text-stone-500">
+              Aç / Kapat
+            </span>
           </div>
+        </summary>
+
+        <div className="mt-6">
 
           {orders.length > 0 ? (
             <div className="overflow-x-auto">
@@ -194,6 +202,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 <thead className="bg-stone-100 text-stone-700">
                   <tr>
                     <th className="px-4 py-3">Sipariş</th>
+                    <th className="px-4 py-3">Telefon</th>
                     <th className="px-4 py-3">Paket</th>
                     <th className="px-4 py-3">Yazı</th>
                     <th className="px-4 py-3">Hediye</th>
@@ -210,6 +219,10 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       <td className="px-4 py-4 font-medium text-stone-900">
                         {order.order_code}
                       </td>
+
+                      <td className="px-4 py-4 text-stone-700">
+                        {order.phone_number || "-"}
+                      </td>                      
 
                       <td className="px-4 py-4 text-stone-700">
                         {order.package_type === "premium"
@@ -302,7 +315,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
               Henüz sipariş yok.
             </p>
           )}
-        </section>
+        </div>
+        </details>
 
         {magnets.length > 0 ? (
           <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
