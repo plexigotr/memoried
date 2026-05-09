@@ -288,7 +288,7 @@ export default async function MagnetPage({
     : [];
 
   return (
-    <main className="min-h-screen bg-stone-50 text-stone-900">
+    <main className="min-h-screen bg-[#f7f2eb] text-stone-900">
       <div className="fixed right-5 top-5 z-50">
         <details className="relative">
           <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/30 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/40 transition hover:scale-105 active:scale-95">
@@ -344,7 +344,7 @@ export default async function MagnetPage({
 
       <section className="border-b border-stone-200">
         {coverImageUrl ? (
-          <div className="relative h-[320px] w-full overflow-hidden md:h-[460px]">
+          <div className="relative h-[520px] w-full overflow-hidden md:h-[680px]">
           <img
             src={coverImageUrl}
             alt={memoryTitle || ui.coverAlt}
@@ -354,14 +354,15 @@ export default async function MagnetPage({
             }}
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/5" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.35)_100%)]" />
             <div className="absolute inset-0 flex items-end justify-center px-6 pb-10">
               <div className="max-w-3xl text-center text-white">
                 <p className="mb-4 text-sm uppercase tracking-[0.3em] text-white/80">
                   Story Magnet
                 </p>
 
-                <h1 className="mb-4 text-4xl font-semibold drop-shadow-lg md:text-6xl">
+                <h1 className="mb-4 text-5xl font-semibold leading-[0.95] tracking-[-0.06em] drop-shadow-lg md:text-7xl">
                   {memoryTitle || ui.memoryReady}
                 </h1>
 
@@ -410,8 +411,8 @@ export default async function MagnetPage({
         )}
       </section>
 
-      <section className="px-6 py-12">
-        <div className="mx-auto max-w-3xl space-y-6">
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-3xl space-y-10">
           {itemsWithUrls.length > 0 ? (
             itemsWithUrls.map((item) => {
               const itemTitle =
@@ -430,7 +431,7 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm"
+                    className="rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
                     {itemTitle ? (
                       <h2 className="mb-3 text-xl font-medium text-stone-900">
@@ -439,7 +440,7 @@ export default async function MagnetPage({
                     ) : null}
 
                     {itemContent ? (
-                      <p className="text-base leading-8 text-stone-700">
+                      <p className="text-lg leading-9 text-stone-700">
                         {itemContent}
                       </p>
                     ) : null}
@@ -451,12 +452,12 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm"
+                    className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
                   >
                     <img
                       src={item.signedUrl}
                       alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
-                      className="w-full object-cover"
+                      className="w-full rounded-[2rem] object-cover"
                     />
 
                     {itemTitle ? (
@@ -474,14 +475,14 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm"
+                    className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
                   >
                     <div className="overflow-hidden rounded-2xl">
                       <video
                         controls
                         src={item.signedUrl}
                         poster={`${item.signedUrl}#t=2`}
-                        className="w-full"
+                        className="w-full rounded-[2rem]"
                       />
                     </div>
 
@@ -500,8 +501,12 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm"
+                    className="rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
+                    <p className="mb-3 text-xs uppercase tracking-[0.3em] text-stone-400">
+                      Sesli Anı
+                    </p>
+
                     {itemTitle ? (
                       <h2 className="mb-4 text-lg font-medium text-stone-900">
                         {itemTitle}
@@ -546,7 +551,7 @@ export default async function MagnetPage({
         </div>
       </section>
 
-      <p className="mt-20 text-center text-xs text-stone-400">
+      <p className="pb-10 pt-10 text-center text-[10px] uppercase tracking-[0.35em] text-stone-400">
         {ui.storyCreatedWith}
       </p>
     </main>
