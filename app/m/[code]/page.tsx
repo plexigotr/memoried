@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
+import MemoryJourneyMap from "@/components/MemoryJourneyMap";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -287,8 +288,32 @@ export default async function MagnetPage({
       )
     : [];
 
+  const journeyItems = itemsWithUrls
+    .map((item) => {
+      const itemTitle =
+        currentLang === "en"
+          ? item.title_en || item.title_tr || item.title
+          : item.title_tr || item.title;
+
+      const itemContent =
+        currentLang === "en"
+          ? item.content_text_en || item.content_text_tr || item.content_text
+          : item.content_text_tr || item.content_text;
+
+      return {
+        id: item.id.toString(),
+        title:
+          itemTitle ||
+          itemContent?.slice(0, 48) ||
+          (currentLang === "en" ? "Memory" : "Anı"),
+        type: item.item_type,
+        previewUrl: item.item_type === "image" ? item.signedUrl : null,
+      };
+    })
+    .slice(0, 7);
+
   return (
-    <main className="min-h-screen bg-[#f7f2eb] text-stone-900">
+    <main className="min-h-screen overflow-hidden bg-[#f7f2eb] text-stone-900">
       <div className="fixed right-5 top-5 z-50">
         <details className="relative">
           <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/30 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/40 transition hover:scale-105 active:scale-95">
@@ -411,7 +436,14 @@ export default async function MagnetPage({
         )}
       </section>
 
-      <section className="px-6 py-16">
+      <MemoryJourneyMap
+        items={journeyItems}
+        currentLang={currentLang}
+        locationText={memoryLocation}
+      />
+
+      <section className="relative px-6 py-16">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#f7f2eb] to-transparent" />
         <div className="mx-auto max-w-3xl space-y-10">
           {itemsWithUrls.length > 0 ? (
             itemsWithUrls.map((item) => {
@@ -430,8 +462,9 @@ export default async function MagnetPage({
               if (item.item_type === "text") {
                 return (
                   <article
+                    id={`memory-item-${item.id.toString()}`}
                     key={item.id.toString()}
-                    className="rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
+                    className="scroll-mt-28 rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
                     {itemTitle ? (
                       <h2 className="mb-3 text-xl font-medium text-stone-900">
@@ -451,8 +484,9 @@ export default async function MagnetPage({
               if (item.item_type === "image" && item.signedUrl) {
                 return (
                   <article
+                    id={`memory-item-${item.id.toString()}`}
                     key={item.id.toString()}
-                    className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
+                    className="scroll-mt-28 overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:shadow-[0_35px_100px_rgba(120,90,60,0.2)]"
                   >
                     <img
                       src={item.signedUrl}
@@ -474,8 +508,9 @@ export default async function MagnetPage({
               if (item.item_type === "video" && item.signedUrl) {
                 return (
                   <article
+                    id={`memory-item-${item.id.toString()}`}
                     key={item.id.toString()}
-                    className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
+                    className="scroll-mt-28 overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:shadow-[0_35px_100px_rgba(120,90,60,0.2)]"
                   >
                     <div className="overflow-hidden rounded-2xl">
                       <video
@@ -500,8 +535,9 @@ export default async function MagnetPage({
               if (item.item_type === "audio" && item.signedUrl) {
                 return (
                   <article
+                    id={`memory-item-${item.id.toString()}`}
                     key={item.id.toString()}
-                    className="rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
+                    className="scroll-mt-28 rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
                     <p className="mb-3 text-xs uppercase tracking-[0.3em] text-stone-400">
                       Sesli Anı
@@ -520,8 +556,9 @@ export default async function MagnetPage({
 
               return (
                 <article
+                  id={`memory-item-${item.id.toString()}`}
                   key={item.id.toString()}
-                  className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm"
+                  className="scroll-mt-28 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm"
                 >
                   <p className="text-sm text-stone-500">
                     {currentLang === "en"
