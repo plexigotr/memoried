@@ -1,51 +1,81 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type MemoryItem = {
   id: string;
-  item_type: string;
-  title: string | null;
-  content_text: string | null;
-  signedUrl: string | null;
+  type: string;
+  title: string;
+  content: string;
+  url: string | null;
 };
 
-type MemoryExperienceProps = {
+type Props = {
   code: string;
   currentLang: "tr" | "en";
   title: string;
-  subtitle: string | null;
-  location: string | null;
+  subtitle: string;
+  location: string;
   coverImageUrl: string | null;
   coverPositionPercent: number;
   items: MemoryItem[];
   shareUrl: string;
 };
 
-const mapPoints = [
-  { x: 20, y: 76 },
-  { x: 34, y: 58 },
-  { x: 47, y: 66 },
-  { x: 57, y: 42 },
-  { x: 69, y: 52 },
-  { x: 78, y: 31 },
-  { x: 88, y: 43 },
+const tr = {
+  detected: "Memory detected",
+  openStory: "Hikâyeyi Aç",
+  edit: "Düzenle",
+  account: "Hesabım",
+  share: "Paylaş",
+  journey: "Memory Map",
+  moments: "Moments",
+  voice: "Sesli Anı",
+  empty: "Anı sayfan hazır. İlk fotoğrafını, notunu, videonu veya ses kaydını ekleyerek başlayabilirsin.",
+  start: "Başlayalım",
+  close: "Kapat",
+  created: "Created with Memoried",
+};
+
+const en = {
+  detected: "Memory detected",
+  openStory: "Open Story",
+  edit: "Edit",
+  account: "My Account",
+  share: "Share",
+  journey: "Memory Map",
+  moments: "Moments",
+  voice: "Voice Memory",
+  empty: "Your memory page is ready. Add your first photo, note, video or voice recording to begin.",
+  start: "Start adding content",
+  close: "Close",
+  created: "Created with Memoried",
+};
+
+const points = [
+  { x: 18, y: 58 },
+  { x: 32, y: 42 },
+  { x: 47, y: 52 },
+  { x: 57, y: 35 },
+  { x: 68, y: 48 },
+  { x: 78, y: 30 },
+  { x: 86, y: 43 },
 ];
 
-function safeText(value: string | null | undefined, fallback: string) {
-  const clean = value?.trim();
-  return clean && clean.length > 0 ? clean : fallback;
+function isMedia(item: MemoryItem) {
+  return item.type === "image" || item.type === "video" || item.type === "audio";
 }
 
-function getPreviewImage(item: MemoryItem, coverImageUrl: string | null) {
-  if ((item.item_type === "image" || item.item_type === "video") && item.signedUrl) {
-    return item.signedUrl;
-  }
-  return coverImageUrl;
+function itemLabel(item: MemoryItem, index: number, lang: "tr" | "en") {
+  if (item.title) return item.title;
+  if (item.type === "image") return lang === "en" ? `Photo ${index + 1}` : `Fotoğraf ${index + 1}`;
+  if (item.type === "video") return lang === "en" ? `Video ${index + 1}` : `Video ${index + 1}`;
+  if (item.type === "audio") return lang === "en" ? `Voice ${index + 1}` : `Ses ${index + 1}`;
+  return lang === "en" ? `Memory ${index + 1}` : `Anı ${index + 1}`;
 }
 
-export default function MemoryExperience({
+export default function MemoryPremiumExperience({
   code,
   currentLang,
   title,
@@ -55,234 +85,208 @@ export default function MemoryExperience({
   coverPositionPercent,
   items,
   shareUrl,
-}: MemoryExperienceProps) {
+}: Props) {
+  const ui = currentLang === "en" ? en : tr;
   const [activeIndex, setActiveIndex] = useState(0);
-  const [showIntro, setShowIntro] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<MemoryItem | null>(null);
+  const [openItem, setOpenItem] = useState<MemoryItem | null>(null);
 
-  const visibleItems = useMemo(() => items.slice(0, 7), [items]);
-  const activeItem = visibleItems[activeIndex] || null;
-  const activePoint = mapPoints[activeIndex] || mapPoints[0];
-  const points = mapPoints.slice(0, Math.max(visibleItems.length, 1));
-  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
+  const shownItems = useMemo(() => items.slice(0, 7), [items]);
+  const activeItem = shownItems[activeIndex] || shownItems[0];
+  const activePoint = points[activeIndex] || points[0];
 
-  useEffect(() => {
-    const timer = window.setTimeout(() => setShowIntro(false), 1350);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  const ui = {
-    storyMagnet: currentLang === "en" ? "Story Magnet" : "Story Magnet",
-    memoryDetected: currentLang === "en" ? "Memory detected" : "Anı algılandı",
-    tapToExplore: currentLang === "en" ? "Swipe memories below" : "Anıları aşağıdan kaydır",
-    edit: currentLang === "en" ? "Edit" : "Düzenle",
-    account: currentLang === "en" ? "My Account" : "Hesabım",
-    whatsapp: currentLang === "en" ? "Share on WhatsApp" : "WhatsApp ile Paylaş",
-    openStory: currentLang === "en" ? "Open story" : "Anıyı aç",
-    journey: currentLang === "en" ? "Memory route" : "Anı rotası",
-    voice: currentLang === "en" ? "Voice memory" : "Sesli anı",
-    note: currentLang === "en" ? "Memory note" : "Anı notu",
-    close: currentLang === "en" ? "Close" : "Kapat",
-    createdWith: currentLang === "en" ? "Created with Story Magnet" : "Story Magnet ile oluşturuldu",
-    noContent:
-      currentLang === "en"
-        ? "Your memory page is ready. Add photos, notes, videos or voice recordings to begin."
-        : "Anı sayfan hazır. Başlamak için fotoğraf, not, video veya ses kaydı ekleyebilirsin.",
-    addContent: currentLang === "en" ? "Start adding content" : "İçerik eklemeye başla",
-  };
-
-  if (visibleItems.length === 0) {
-    return (
-      <main className="min-h-screen bg-[#0b0b0b] px-6 py-10 text-white">
-        <div className="mx-auto flex min-h-[85vh] max-w-xl flex-col justify-center text-center">
-          <p className="mb-5 text-xs uppercase tracking-[0.45em] text-white/45">{ui.storyMagnet}</p>
-          <h1 className="mb-5 text-5xl font-semibold tracking-[-0.07em]">{title}</h1>
-          {subtitle ? <p className="mb-8 text-base leading-8 text-white/65">{subtitle}</p> : null}
-          <p className="mb-8 rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 text-sm leading-7 text-white/65 backdrop-blur-2xl">
-            {ui.noContent}
-          </p>
-          <Link href={`/m/${code}/edit?lang=${currentLang}`} className="mx-auto rounded-full bg-white px-6 py-3 text-sm font-semibold text-black">
-            {ui.addContent}
-          </Link>
-        </div>
-      </main>
-    );
-  }
+  const heroImage = coverImageUrl || shownItems.find((item) => item.type === "image" && item.url)?.url || null;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#08090b] text-white">
-      {showIntro ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#08090b]">
-          <div className="text-center">
-            <div className="mx-auto mb-6 h-16 w-16 rounded-full border border-white/15 bg-white/[0.06] shadow-[0_0_80px_rgba(255,111,66,0.35)]">
-              <div className="mx-auto mt-5 h-6 w-6 animate-ping rounded-full bg-[#ff7849]" />
-            </div>
-            <p className="mb-3 text-xs uppercase tracking-[0.45em] text-white/45">{ui.memoryDetected}</p>
-            <h1 className="px-8 text-3xl font-semibold tracking-[-0.05em]">{title}</h1>
-          </div>
-        </div>
-      ) : null}
+    <main className="min-h-screen overflow-x-hidden bg-[#090807] text-[#fff8ed]">
+      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_20%_0%,rgba(214,148,77,0.22),transparent_34%),radial-gradient(circle_at_85%_18%,rgba(255,255,255,0.10),transparent_28%),linear-gradient(180deg,#120f0c_0%,#090807_45%,#0d0b09_100%)]" />
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,.7)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.7)_1px,transparent_1px)] [background-size:42px_42px]" />
 
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,120,73,0.18),transparent_35%),linear-gradient(180deg,#101217_0%,#08090b_65%)]" />
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.07] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:18px_18px]" />
-
-      <div className="fixed right-5 top-5 z-50">
+      <div className="fixed right-4 top-4 z-50">
         <details className="relative">
-          <summary className="flex h-12 w-12 cursor-pointer list-none items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur-2xl">
-            <span className="text-xl">•••</span>
+          <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur-2xl transition hover:bg-white/15">
+            <span className="text-lg leading-none">⋯</span>
           </summary>
-          <div className="absolute right-0 mt-3 w-52 overflow-hidden rounded-3xl border border-white/10 bg-[#15161a]/90 text-sm text-white shadow-2xl backdrop-blur-2xl">
+          <div className="absolute right-0 mt-3 w-48 overflow-hidden rounded-3xl border border-white/10 bg-[#15110d]/90 text-sm text-white shadow-2xl backdrop-blur-2xl">
             <Link href={`/m/${code}/edit?lang=${currentLang}`} className="block px-5 py-4 transition hover:bg-white/10">{ui.edit}</Link>
             <Link href="/account" className="block border-t border-white/10 px-5 py-4 transition hover:bg-white/10">{ui.account}</Link>
-            <a href={`https://wa.me/?text=${encodeURIComponent(`${title} - ${shareUrl}`)}`} target="_blank" rel="noopener noreferrer" className="block border-t border-white/10 px-5 py-4 transition hover:bg-white/10">{ui.whatsapp}</a>
+            <a href={`https://wa.me/?text=${encodeURIComponent(`${title || "Memoried"} - ${shareUrl}`)}`} target="_blank" rel="noopener noreferrer" className="block border-t border-white/10 px-5 py-4 transition hover:bg-white/10">{ui.share}</a>
           </div>
         </details>
       </div>
 
-      <section className="relative z-10 min-h-screen">
-        <div className="absolute inset-0">
-          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full opacity-80">
-            <defs>
-              <linearGradient id="routeGradient" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
-                <stop offset="100%" stopColor="#ff7849" stopOpacity="0.85" />
-              </linearGradient>
-              <filter id="softGlow">
-                <feGaussianBlur stdDeviation="1.2" result="coloredBlur" />
-                <feMerge>
-                  <feMergeNode in="coloredBlur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-            <path d="M0 22 C18 18 18 35 38 29 C58 22 65 34 100 25 L100 0 L0 0 Z" fill="rgba(255,255,255,0.05)" />
-            <path d="M0 88 C17 78 25 93 43 83 C61 72 79 88 100 73 L100 100 L0 100 Z" fill="rgba(255,255,255,0.04)" />
-            <polyline points={polyline} fill="none" stroke="url(#routeGradient)" strokeWidth="0.55" strokeLinecap="round" strokeLinejoin="round" filter="url(#softGlow)" />
-            {points.map((point, index) => {
-              const isActive = index === activeIndex;
-              return (
-                <g key={`${point.x}-${point.y}`}>
-                  <circle cx={point.x} cy={point.y} r={isActive ? 4.2 : 2.7} fill={isActive ? "rgba(255,120,73,0.24)" : "rgba(255,255,255,0.10)"} />
-                  <circle cx={point.x} cy={point.y} r={isActive ? 1.35 : 0.9} fill={isActive ? "#ff7849" : "rgba(255,255,255,0.70)"} />
-                </g>
-              );
-            })}
-          </svg>
-        </div>
-
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,9,11,0.08)_0%,rgba(8,9,11,0.35)_42%,rgba(8,9,11,0.94)_100%)]" />
-
-        <div className="relative z-20 flex min-h-screen flex-col justify-between px-5 pb-7 pt-20 sm:px-8">
-          <div className="max-w-xl">
-            <p className="mb-4 text-xs uppercase tracking-[0.38em] text-white/45">{ui.journey}</p>
-            <h1 className="max-w-[13ch] text-5xl font-semibold leading-[0.9] tracking-[-0.075em] sm:text-7xl">
-              {title}
-            </h1>
-            <div className="mt-5 flex flex-wrap gap-2 text-xs text-white/70">
-              {location ? <span className="rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-xl">📍 {location}</span> : null}
-              <span className="rounded-full border border-white/10 bg-white/10 px-4 py-2 backdrop-blur-xl">{visibleItems.length} moment</span>
-            </div>
+      <section className="relative z-10 min-h-[100svh] px-4 pb-8 pt-4 sm:px-6">
+        <div className="relative mx-auto flex min-h-[calc(100svh-32px)] max-w-5xl flex-col overflow-hidden rounded-[2.2rem] border border-white/10 bg-white/[0.04] shadow-[0_40px_120px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+          <div className="absolute inset-0">
+            {heroImage ? (
+              <img
+                src={heroImage}
+                alt={title || "Memoried"}
+                className="h-full w-full object-cover opacity-90"
+                style={{ objectPosition: `center ${coverPositionPercent}%` }}
+              />
+            ) : null}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#090807] via-[#090807]/45 to-black/10" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.48)_72%)]" />
           </div>
 
-          <div>
-            <div className="mb-5 rounded-[2rem] border border-white/10 bg-black/20 p-4 shadow-2xl backdrop-blur-2xl">
-              <div className="flex items-center gap-4">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1.5rem] bg-white/10">
-                  {getPreviewImage(activeItem, coverImageUrl) ? (
-                    <img src={getPreviewImage(activeItem, coverImageUrl) || ""} alt="" className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-2xl">✦</div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="mb-1 text-xs uppercase tracking-[0.24em] text-white/40">{activeIndex + 1} / {visibleItems.length}</p>
-                  <h2 className="truncate text-xl font-semibold tracking-[-0.04em]">{safeText(activeItem?.title, title)}</h2>
-                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-white/55">{safeText(activeItem?.content_text, subtitle || ui.tapToExplore)}</p>
-                </div>
-                <button onClick={() => activeItem && setSelectedItem(activeItem)} className="rounded-full bg-white px-4 py-3 text-xs font-semibold text-black">
-                  {ui.openStory}
-                </button>
+          <div className="relative z-10 flex flex-1 flex-col justify-between p-5 sm:p-8 md:p-10">
+            <div className="flex items-center justify-between gap-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-[11px] uppercase tracking-[0.24em] text-white/80 backdrop-blur-xl">
+                <span className="h-2 w-2 rounded-full bg-[#f4b36b] shadow-[0_0_18px_rgba(244,179,107,.9)]" />
+                {ui.detected}
               </div>
+              {location ? <div className="hidden rounded-full border border-white/15 bg-black/20 px-4 py-2 text-xs text-white/75 backdrop-blur-xl sm:block">{location}</div> : null}
             </div>
 
-            <div className="-mx-5 flex snap-x gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:-mx-8 sm:px-8">
-              {visibleItems.map((item, index) => {
-                const image = getPreviewImage(item, coverImageUrl);
-                const isActive = index === activeIndex;
+            <div className="max-w-3xl pb-3 pt-24 sm:pt-32">
+              <p className="mb-4 text-xs uppercase tracking-[0.34em] text-[#f4b36b]">Memoried</p>
+              <h1 className="text-5xl font-semibold leading-[0.9] tracking-[-0.07em] text-white drop-shadow-2xl sm:text-7xl md:text-8xl">
+                {title || (currentLang === "en" ? "Your Memory" : "Anın Hazır")}
+              </h1>
+              {subtitle ? <p className="mt-6 max-w-2xl text-base leading-7 text-white/82 sm:text-lg">{subtitle}</p> : null}
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href="#moments" className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-[#15110d] shadow-xl transition hover:scale-[1.02]">{ui.openStory}</a>
+                <Link href={`/m/${code}/edit?lang=${currentLang}`} className="rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-medium text-white backdrop-blur-xl transition hover:bg-white/15">{ui.edit}</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 px-4 pb-10 sm:px-6" id="moments">
+        <div className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-[1.05fr_.95fr]">
+          <div className="relative min-h-[430px] overflow-hidden rounded-[2rem] border border-white/10 bg-[#15110d] p-5 shadow-[0_30px_90px_rgba(0,0,0,0.35)]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(244,179,107,.18),transparent_32%),linear-gradient(135deg,rgba(255,255,255,.08),transparent_40%)]" />
+            <div className="relative z-10 mb-5 flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-[#f4b36b]">{ui.journey}</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em]">{location || title}</h2>
+              </div>
+              <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs text-white/70">{shownItems.length}/7</div>
+            </div>
+
+            <div className="relative z-10 h-[310px] overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#221c16]">
+              <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full opacity-80">
+                <defs>
+                  <linearGradient id="line" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0%" stopColor="#f4b36b" stopOpacity="0.15" />
+                    <stop offset="100%" stopColor="#f4b36b" stopOpacity="0.85" />
+                  </linearGradient>
+                </defs>
+                <path d="M5 72 C18 38, 36 80, 48 48 S70 62, 95 25" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="18" strokeLinecap="round" />
+                <path d="M2 28 C28 10, 35 42, 58 22 S76 38, 96 10" fill="none" stroke="rgba(255,255,255,.045)" strokeWidth="13" strokeLinecap="round" />
+                {shownItems.length > 1 ? (
+                  <polyline points={shownItems.map((_, i) => `${points[i].x},${points[i].y}`).join(" ")} fill="none" stroke="url(#line)" strokeWidth="0.8" strokeLinecap="round" strokeDasharray="2 2" />
+                ) : null}
+              </svg>
+
+              {shownItems.map((item, index) => {
+                const point = points[index];
+                const active = index === activeIndex;
                 return (
                   <button
                     key={item.id}
+                    type="button"
                     onClick={() => setActiveIndex(index)}
-                    className={`relative h-28 w-40 shrink-0 snap-start overflow-hidden rounded-[1.6rem] border text-left shadow-2xl transition ${isActive ? "scale-[1.02] border-[#ff7849]/80" : "border-white/10 opacity-80"}`}
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: `${point.x}%`, top: `${point.y}%` }}
+                    aria-label={itemLabel(item, index, currentLang)}
                   >
-                    {image ? <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" /> : null}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <p className="mb-1 text-[10px] text-white/55">Stop {index + 1}</p>
-                      <p className="line-clamp-2 text-sm font-semibold leading-4 text-white">{safeText(item.title, title)}</p>
-                    </div>
+                    <span className={`block rounded-full transition ${active ? "h-7 w-7 bg-[#f4b36b]/20" : "h-5 w-5 bg-white/10"}`}>
+                      <span className={`m-auto block rounded-full bg-[#f4b36b] shadow-[0_0_24px_rgba(244,179,107,.9)] transition ${active ? "h-3.5 w-3.5 translate-y-[6.5px]" : "h-2.5 w-2.5 translate-y-[5px]"}`} />
+                    </span>
                   </button>
                 );
               })}
+
+              {activeItem ? (
+                <div className="absolute bottom-4 left-4 right-4 rounded-3xl border border-white/10 bg-black/35 p-4 backdrop-blur-2xl">
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">Moment {activeIndex + 1}</p>
+                  <h3 className="mt-1 line-clamp-1 text-lg font-semibold tracking-[-0.03em]">{itemLabel(activeItem, activeIndex, currentLang)}</h3>
+                </div>
+              ) : null}
             </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-white/[0.055] p-4 shadow-[0_30px_90px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+            <div className="mb-4 flex items-center justify-between px-1">
+              <h2 className="text-2xl font-semibold tracking-[-0.05em]">{ui.moments}</h2>
+              <span className="text-xs text-white/45">Swipe</span>
+            </div>
+
+            {shownItems.length > 0 ? (
+              <div className="flex gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:overflow-visible">
+                {shownItems.map((item, index) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveIndex(index);
+                      setOpenItem(item);
+                    }}
+                    className={`group flex min-w-[78%] gap-4 rounded-[1.5rem] border p-3 text-left transition sm:min-w-[48%] lg:min-w-0 ${index === activeIndex ? "border-[#f4b36b]/45 bg-[#f4b36b]/10" : "border-white/10 bg-white/[0.045] hover:bg-white/[0.08]"}`}
+                  >
+                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-[1.15rem] bg-white/10">
+                      {item.type === "image" && item.url ? <img src={item.url} alt="" className="h-full w-full object-cover" /> : null}
+                      {item.type === "video" && item.url ? <video src={item.url} className="h-full w-full object-cover" muted playsInline /> : null}
+                      {item.type === "audio" ? <div className="flex h-full w-full items-center justify-center text-2xl">♪</div> : null}
+                      {item.type === "text" ? <div className="flex h-full w-full items-center justify-center text-2xl">“”</div> : null}
+                    </div>
+                    <div className="min-w-0 py-1">
+                      <p className="text-[11px] uppercase tracking-[0.22em] text-[#f4b36b]/80">#{index + 1}</p>
+                      <h3 className="mt-1 line-clamp-2 text-base font-semibold leading-5 tracking-[-0.03em]">{itemLabel(item, index, currentLang)}</h3>
+                      {item.content ? <p className="mt-2 line-clamp-2 text-sm leading-5 text-white/55">{item.content}</p> : null}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-white/15 p-6 text-center text-white/70">
+                <p className="leading-7">{ui.empty}</p>
+                <Link href={`/m/${code}/edit?lang=${currentLang}`} className="mt-5 inline-block rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#15110d]">{ui.start}</Link>
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      <section className="relative z-10 px-5 pb-16 sm:px-8">
-        <div className="mx-auto max-w-2xl space-y-5">
-          {visibleItems.map((item, index) => {
-            const image = getPreviewImage(item, coverImageUrl);
-            return (
-              <article key={`list-${item.id}`} className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.06] shadow-[0_30px_100px_rgba(0,0,0,0.35)] backdrop-blur-2xl">
-                {item.item_type === "image" && item.signedUrl ? <img src={item.signedUrl} alt={safeText(item.title, title)} className="w-full object-cover" /> : null}
-                {item.item_type === "video" && item.signedUrl ? <video controls playsInline src={item.signedUrl} className="w-full" /> : null}
-                {item.item_type === "audio" && item.signedUrl ? (
-                  <div className="p-6">
-                    <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#ffb49b]">{ui.voice}</p>
-                    <div className="mb-5 flex h-14 items-center gap-1 overflow-hidden rounded-2xl bg-white/[0.06] px-4">
-                      {Array.from({ length: 34 }).map((_, i) => (
-                        <span key={i} className="w-1 rounded-full bg-white/55" style={{ height: `${12 + ((i * 7) % 32)}px` }} />
-                      ))}
-                    </div>
-                    <audio controls src={item.signedUrl} className="w-full" />
-                  </div>
-                ) : null}
-                {item.item_type === "text" ? (
-                  <div className="p-6">
-                    <p className="mb-4 text-xs uppercase tracking-[0.35em] text-[#ffb49b]">{ui.note}</p>
-                    <h2 className="mb-3 text-2xl font-semibold tracking-[-0.05em]">{safeText(item.title, title)}</h2>
-                    {item.content_text ? <p className="text-base leading-8 text-white/70">{item.content_text}</p> : null}
-                  </div>
-                ) : item.item_type !== "audio" ? (
-                  <div className="p-5">
-                    <p className="mb-1 text-xs text-white/35">Stop {index + 1}</p>
-                    <h2 className="text-xl font-semibold tracking-[-0.04em]">{safeText(item.title, title)}</h2>
-                    {item.content_text ? <p className="mt-2 text-sm leading-6 text-white/60">{item.content_text}</p> : null}
-                  </div>
-                ) : null}
-              </article>
-            );
-          })}
+      <section className="relative z-10 px-4 pb-16 sm:px-6">
+        <div className="mx-auto max-w-5xl columns-1 gap-5 space-y-5 sm:columns-2 lg:columns-3">
+          {items.map((item, index) => (
+            <article key={item.id} className="break-inside-avoid overflow-hidden rounded-[1.8rem] border border-white/10 bg-white/[0.055] p-3 shadow-[0_22px_70px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+              {item.type === "image" && item.url ? <img src={item.url} alt={itemLabel(item, index, currentLang)} className="w-full rounded-[1.35rem] object-cover" /> : null}
+              {item.type === "video" && item.url ? <video controls src={item.url} className="w-full rounded-[1.35rem]" /> : null}
+              {item.type === "audio" && item.url ? (
+                <div className="rounded-[1.35rem] bg-[#17120e] p-5">
+                  <p className="mb-4 text-xs uppercase tracking-[0.28em] text-[#f4b36b]">{ui.voice}</p>
+                  <audio controls src={item.url} className="w-full" />
+                </div>
+              ) : null}
+              {(item.title || item.content || item.type === "text") ? (
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold tracking-[-0.04em]">{itemLabel(item, index, currentLang)}</h3>
+                  {item.content ? <p className="mt-3 whitespace-pre-line text-sm leading-7 text-white/62">{item.content}</p> : null}
+                </div>
+              ) : null}
+            </article>
+          ))}
         </div>
-        <p className="pb-6 pt-12 text-center text-[10px] uppercase tracking-[0.35em] text-white/30">{ui.createdWith}</p>
       </section>
 
-      {selectedItem ? (
-        <div className="fixed inset-0 z-[90] bg-black/80 p-4 backdrop-blur-xl" onClick={() => setSelectedItem(null)}>
-          <div className="mx-auto flex h-full max-w-md flex-col justify-end" onClick={(e) => e.stopPropagation()}>
-            <div className="max-h-[88vh] overflow-hidden rounded-[2.4rem] border border-white/10 bg-[#111217] shadow-2xl">
-              <div className="max-h-[88vh] overflow-y-auto">
-                {selectedItem.item_type === "image" && selectedItem.signedUrl ? <img src={selectedItem.signedUrl} alt="" className="w-full" /> : null}
-                {selectedItem.item_type === "video" && selectedItem.signedUrl ? <video controls autoPlay playsInline src={selectedItem.signedUrl} className="w-full" /> : null}
-                <div className="p-6">
-                  <p className="mb-2 text-xs uppercase tracking-[0.35em] text-[#ffb49b]">{ui.storyMagnet}</p>
-                  <h2 className="mb-3 text-3xl font-semibold tracking-[-0.06em]">{safeText(selectedItem.title, title)}</h2>
-                  {selectedItem.content_text ? <p className="mb-5 text-base leading-8 text-white/70">{selectedItem.content_text}</p> : null}
-                  {selectedItem.item_type === "audio" && selectedItem.signedUrl ? <audio controls autoPlay src={selectedItem.signedUrl} className="w-full" /> : null}
-                  <button onClick={() => setSelectedItem(null)} className="mt-6 w-full rounded-full bg-white px-6 py-3 text-sm font-semibold text-black">{ui.close}</button>
-                </div>
-              </div>
+      <p className="relative z-10 pb-10 text-center text-[10px] uppercase tracking-[0.35em] text-white/30">{ui.created}</p>
+
+      {openItem ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 p-4 backdrop-blur-xl" onClick={() => setOpenItem(null)}>
+          <div className="max-h-[90svh] w-full max-w-3xl overflow-auto rounded-[2rem] border border-white/10 bg-[#110d0a] p-4 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-3 flex justify-end">
+              <button type="button" onClick={() => setOpenItem(null)} className="rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm text-white/80">{ui.close}</button>
+            </div>
+            {openItem.type === "image" && openItem.url ? <img src={openItem.url} alt={openItem.title} className="max-h-[70svh] w-full rounded-[1.5rem] object-contain" /> : null}
+            {openItem.type === "video" && openItem.url ? <video controls autoPlay src={openItem.url} className="w-full rounded-[1.5rem]" /> : null}
+            {openItem.type === "audio" && openItem.url ? <audio controls autoPlay src={openItem.url} className="mt-4 w-full" /> : null}
+            <div className="p-4">
+              {openItem.title ? <h3 className="text-2xl font-semibold tracking-[-0.05em]">{openItem.title}</h3> : null}
+              {openItem.content ? <p className="mt-3 whitespace-pre-line text-base leading-8 text-white/65">{openItem.content}</p> : null}
             </div>
           </div>
         </div>
