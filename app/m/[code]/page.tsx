@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
+import MemoryMapExperience from "@/components/MemoryMapExperience";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -25,6 +26,36 @@ const enDate = new Intl.DateTimeFormat("en-US", {
 
 function safeText(value?: string | null) {
   return value && value.trim().length > 0 ? value.trim() : null;
+}
+
+
+function parseMemoryMeta(value?: string | null) {
+  const raw = safeText(value);
+
+  if (!raw) {
+    return { note: null as string | null, locationName: null as string | null, latitude: null as number | null, longitude: null as number | null };
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as {
+      note?: string;
+      locationName?: string;
+      latitude?: number | string;
+      longitude?: number | string;
+    };
+
+    const latitude = parsed.latitude === undefined || parsed.latitude === null || parsed.latitude === "" ? null : Number(parsed.latitude);
+    const longitude = parsed.longitude === undefined || parsed.longitude === null || parsed.longitude === "" ? null : Number(parsed.longitude);
+
+    return {
+      note: safeText(parsed.note || null),
+      locationName: safeText(parsed.locationName || null),
+      latitude: latitude !== null && Number.isFinite(latitude) ? latitude : null,
+      longitude: longitude !== null && Number.isFinite(longitude) ? longitude : null,
+    };
+  } catch {
+    return { note: raw, locationName: null as string | null, latitude: null as number | null, longitude: null as number | null };
+  }
 }
 
 function splitLocation(location?: string | null) {
@@ -196,6 +227,11 @@ export default async function MagnetPage({ params, searchParams }: MagnetPagePro
       currentLang === "en"
         ? "The places, moments and feelings that shaped this story."
         : "Bu hikâyeyi oluşturan yerler, anlar ve hisler.",
+    mapEmptyTitle: currentLang === "en" ? "Location has not been added yet" : "Henüz konum eklenmedi",
+    mapEmptyText:
+      currentLang === "en"
+        ? "When you upload a photo, choose a location to turn this area into a real interactive memory map."
+        : "Fotoğraf yüklerken konum seçtiğinde bu alan gerçek, etkileşimli bir anı haritasına dönüşür.",
     image: currentLang === "en" ? "Photo Memory" : "Fotoğraf Anısı",
     video: currentLang === "en" ? "Video Memory" : "Video Anısı",
     audio: currentLang === "en" ? "Voice Memory" : "Sesli Anı",
@@ -303,12 +339,32 @@ export default async function MagnetPage({ params, searchParams }: MagnetPagePro
     return premiumEmptyState(currentLang, magnet.magnet_code);
   }
 
-  const locations = splitLocation(memoryLocation);
-  const visibleMarkers = locations.length > 0 ? locations : [memoryLocation || (currentLang === "en" ? "Memory Place" : "Anı Noktası")];
   const heroImage = coverImageUrl || itemsWithUrls.find((item) => item.item_type === "image" && item.signedUrl)?.signedUrl || null;
   const totalPhotos = itemsWithUrls.filter((item) => item.item_type === "image").length;
   const totalVideos = itemsWithUrls.filter((item) => item.item_type === "video").length;
   const totalAudios = itemsWithUrls.filter((item) => item.item_type === "audio").length;
+
+  const memoryMarkers = itemsWithUrls
+    .map((item, index) => {
+      const meta = parseMemoryMeta(item.content_text);
+
+      if (meta.latitude === null || meta.longitude === null) return null;
+
+      const itemTitle =
+        currentLang === "en"
+          ? safeText(item.title_en) || safeText(item.title_tr) || safeText(item.title)
+          : safeText(item.title_tr) || safeText(item.title);
+
+      return {
+        id: item.id.toString(),
+        scene: `${currentLang === "en" ? "Scene" : "Sahne"} ${String(index + 1).padStart(2, "0")}`,
+        title: itemTitle || (currentLang === "en" ? "Memory" : "Anı"),
+        locationName: meta.locationName || memoryLocation || (currentLang === "en" ? "Memory Place" : "Anı Noktası"),
+        latitude: meta.latitude,
+        longitude: meta.longitude,
+      };
+    })
+    .filter((marker): marker is NonNullable<typeof marker> => marker !== null);
 
   return (
     <main className="memory-premium-page min-h-screen overflow-hidden bg-[#120f0b] text-[#f8efe3]">
@@ -441,10 +497,13 @@ export default async function MagnetPage({ params, searchParams }: MagnetPagePro
                     ? safeText(item.title_en) || safeText(item.title_tr) || safeText(item.title)
                     : safeText(item.title_tr) || safeText(item.title);
 
-                const itemContent =
+                const rawItemContent =
                   currentLang === "en"
                     ? safeText(item.content_text_en) || safeText(item.content_text_tr) || safeText(item.content_text)
                     : safeText(item.content_text_tr) || safeText(item.content_text);
+
+                const itemMeta = parseMemoryMeta(rawItemContent);
+                const itemContent = itemMeta.note;
 
                 const label =
                   item.item_type === "image"
@@ -456,10 +515,10 @@ export default async function MagnetPage({ params, searchParams }: MagnetPagePro
                     : ui.note;
 
                 return (
-                  <article key={item.id.toString()} className="group relative md:pl-12">
+                  <article key={item.id.toString()} data-memory-scene={index} className="memory-scene group relative md:pl-12">
                     <div className="absolute left-[11px] top-8 hidden h-3 w-3 rounded-full bg-[#d7b98b] shadow-[0_0_0_8px_rgba(215,185,139,0.1),0_0_35px_rgba(215,185,139,0.45)] md:block" />
 
-                    <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.065] shadow-[0_30px_110px_rgba(0,0,0,0.30)] backdrop-blur-2xl transition duration-500 group-hover:-translate-y-1 group-hover:bg-white/[0.085] md:rounded-[2.6rem]">
+                    <div className="memory-cinematic-block overflow-hidden transition duration-500 group-hover:-translate-y-1">
                       <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 md:px-7">
                         <div>
                           <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-[#d7b98b]">
@@ -468,6 +527,11 @@ export default async function MagnetPage({ params, searchParams }: MagnetPagePro
                           <p className="mt-1 text-xs text-[#e9dcc8]/48">
                             {currentLang === "en" ? "Scene" : "Sahne"} {String(index + 1).padStart(2, "0")}
                           </p>
+                          {itemMeta.locationName ? (
+                            <p className="mt-2 inline-flex rounded-full border border-[#d7b98b]/20 bg-[#d7b98b]/10 px-3 py-1 text-[11px] text-[#ead6b7]">
+                              {itemMeta.locationName}
+                            </p>
+                          ) : null}
                         </div>
                         <div className="h-px flex-1 bg-gradient-to-r from-[#d7b98b]/25 to-transparent" />
                       </div>
@@ -477,7 +541,7 @@ export default async function MagnetPage({ params, searchParams }: MagnetPagePro
                           <img
                             src={item.signedUrl}
                             alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
-                            className="max-h-[720px] w-full rounded-[1.55rem] object-cover shadow-[0_20px_70px_rgba(0,0,0,0.25)] md:rounded-[2rem]"
+                            className="memory-scene-image w-full object-cover"
                           />
                         </div>
                       ) : null}
@@ -527,63 +591,23 @@ export default async function MagnetPage({ params, searchParams }: MagnetPagePro
             </div>
 
             <aside className="lg:sticky lg:top-8 lg:self-start">
-              <div className="overflow-hidden rounded-[2.3rem] border border-white/10 bg-white/[0.065] p-5 shadow-[0_30px_110px_rgba(0,0,0,0.32)] backdrop-blur-2xl">
-                <div className="mb-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.38em] text-[#d7b98b]">
-                    {ui.mapTitle}
-                  </p>
-                  <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[#fff8ed]">
-                    {currentLang === "en" ? "Places that hold the story" : "Hikâyeyi taşıyan yerler"}
-                  </h3>
-                  <p className="mt-3 text-sm leading-7 text-[#e9dcc8]/60">
-                    {ui.mapText}
-                  </p>
-                </div>
-
-                <div className="relative h-[420px] overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#15110d]">
-                  <div className="absolute inset-0 opacity-45 [background-image:linear-gradient(rgba(215,185,139,.13)_1px,transparent_1px),linear-gradient(90deg,rgba(215,185,139,.13)_1px,transparent_1px)] [background-size:38px_38px]" />
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_25%,rgba(215,185,139,.28),transparent_18%),radial-gradient(circle_at_74%_62%,rgba(255,255,255,.12),transparent_20%),radial-gradient(circle_at_42%_82%,rgba(215,185,139,.18),transparent_17%)]" />
-                  <svg className="absolute inset-0 h-full w-full" viewBox="0 0 380 420" fill="none" aria-hidden="true">
-                    <path d="M58 334 C105 270 92 205 154 174 C222 139 216 76 313 68" stroke="rgba(215,185,139,0.45)" strokeWidth="2" strokeDasharray="8 10" />
-                    <path d="M70 92 C130 126 172 86 224 122 C280 160 250 230 326 270" stroke="rgba(255,255,255,0.16)" strokeWidth="1.4" strokeDasharray="5 9" />
-                  </svg>
-
-                  {visibleMarkers.map((place, index) => {
-                    const positions = [
-                      "left-[16%] top-[72%]",
-                      "left-[38%] top-[42%]",
-                      "left-[72%] top-[16%]",
-                      "left-[77%] top-[61%]",
-                      "left-[26%] top-[22%]",
-                      "left-[55%] top-[77%]",
-                      "left-[58%] top-[31%]",
-                    ];
-
-                    return (
-                      <div key={`${place}-${index}`} className={`absolute ${positions[index % positions.length]}`}>
-                        <div className="relative -translate-x-1/2 -translate-y-1/2">
-                          <span className="absolute inset-0 h-5 w-5 animate-ping rounded-full bg-[#d7b98b]/30" />
-                          <span className="relative block h-5 w-5 rounded-full border border-[#fff8ed]/80 bg-[#d7b98b] shadow-[0_0_32px_rgba(215,185,139,0.55)]" />
-                          <span className="absolute left-6 top-1/2 max-w-[135px] -translate-y-1/2 rounded-full border border-white/10 bg-black/35 px-3 py-1.5 text-[10px] font-medium text-[#fff8ed] backdrop-blur-xl">
-                            {place}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-5 space-y-2">
-                  {visibleMarkers.map((place, index) => (
-                    <div key={`list-${place}-${index}`} className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.045] px-4 py-3 text-sm text-[#e9dcc8]/75">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#d7b98b]/12 text-xs font-semibold text-[#d7b98b]">
-                        {index + 1}
-                      </span>
-                      <span>{place}</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="mb-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.38em] text-[#d7b98b]">
+                  {ui.mapTitle}
+                </p>
+                <h3 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-[#fff8ed]">
+                  {currentLang === "en" ? "Places that move with the story" : "Hikâyeyle hareket eden yerler"}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-[#e9dcc8]/60">
+                  {ui.mapText}
+                </p>
               </div>
+
+              <MemoryMapExperience
+                markers={memoryMarkers}
+                emptyTitle={ui.mapEmptyTitle}
+                emptyText={ui.mapEmptyText}
+              />
             </aside>
           </div>
         </div>

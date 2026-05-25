@@ -8,6 +8,17 @@ import ImageUploadForm from "@/components/ImageUploadForm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+function previewMemoryText(value?: string | null) {
+  if (!value) return null;
+
+  try {
+    const parsed = JSON.parse(value) as { note?: string; locationName?: string };
+    return parsed.note || parsed.locationName || null;
+  } catch {
+    return value;
+  }
+}
+
 type EditPageProps = {
   params: Promise<{ code: string }>;
   searchParams: Promise<{
@@ -792,9 +803,9 @@ export default async function EditPage({
                         className="w-full"
                         src={item.signedUrl}
                       />
-                    ) : item.content_text ? (
+                    ) : previewMemoryText(item.content_text) ? (
                       <p className="text-sm leading-7 text-stone-700">
-                        {item.content_text}
+                        {previewMemoryText(item.content_text)}
                       </p>
                     ) : (
                       <p className="text-sm text-stone-500">
