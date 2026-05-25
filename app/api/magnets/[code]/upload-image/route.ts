@@ -18,12 +18,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const formData = await request.formData();
 
     const title = String(formData.get("imageTitle") || "").trim();
-    const locationName = String(formData.get("locationName") || "").trim();
-    const latitudeRaw = String(formData.get("latitude") || "").trim();
-    const longitudeRaw = String(formData.get("longitude") || "").trim();
     const note = String(formData.get("note") || "").trim();
+    const lang = String(formData.get("lang") || "tr") === "en" ? "en" : "tr";
+    const locationName = String(formData.get("locationName") || "").trim();
+    const latitudeRaw = String(formData.get("latitude") || "").trim().replace(",", ".");
+    const longitudeRaw = String(formData.get("longitude") || "").trim().replace(",", ".");
     const latitude = latitudeRaw ? Number(latitudeRaw) : null;
     const longitude = longitudeRaw ? Number(longitudeRaw) : null;
+    const safeLatitude = Number.isFinite(latitude) ? latitude : null;
+    const safeLongitude = Number.isFinite(longitude) ? longitude : null;
     const file = formData.get("imageFile") as File | null;
 
     if (!file || file.size === 0) {
@@ -152,23 +155,18 @@ export async function POST(request: NextRequest, context: RouteContext) {
       magnet.memory.memory_items.sort((a, b) => b.sort_order - a.sort_order)[0]
         ?.sort_order ?? 0;
 
-    const memoryMeta =
-      note || locationName || latitude !== null || longitude !== null
-        ? JSON.stringify({
-            note: note || null,
-            locationName: locationName || null,
-            latitude: latitude !== null && Number.isFinite(latitude) ? latitude : null,
-            longitude: longitude !== null && Number.isFinite(longitude) ? longitude : null,
-          })
-        : null;
-
     await prisma.memory_items.create({
       data: {
         memory_id: magnet.memory.id,
         item_type: "image",
         title: title || null,
-        content_text: memoryMeta,
+        content_text: note || null,
+        content_text_tr: lang === "tr" ? note || null : null,
+        content_text_en: lang === "en" ? note || null : null,
         file_path: filePath,
+        location_name: locationName || null,
+        latitude: safeLatitude,
+        longitude: safeLongitude,
         sort_order: lastSortOrder + 1,
         is_visible: true,
       },

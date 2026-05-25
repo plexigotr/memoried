@@ -12,76 +12,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  min-height: 100%;
-  scroll-behavior: smooth;
-  background: #120f0b;
-}
-
-body {
-  min-height: 100%;
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
-
-img,
-video {
-  max-width: 100%;
-}
-
-button,
-a,
-summary {
-  -webkit-tap-highlight-color: transparent;
-}
-
-.memory-premium-page {
-  isolation: isolate;
-}
-
-.memory-premium-page::selection {
-  background: rgba(215, 185, 139, 0.35);
-  color: #fff8ed;
-}
-
-.memory-hero-image {
-  animation: memoryHeroDrift 18s ease-in-out infinite alternate;
-  transform-origin: center;
-}
-
-@keyframes memoryHeroDrift {
-  from {
-    transform: scale(1.03) translate3d(0, 0, 0);
-  }
-
-  to {
-    transform: scale(1.11) translate3d(-1.2%, -1.2%, 0);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  .memory-hero-image {
-    animation: none;
-  }
-
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -89,214 +19,48 @@ summary {
   }
 }
 
-.memory-scene {
-  scroll-margin-top: 22vh;
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.memory-cinematic-block {
-  position: relative;
-  border-radius: 2.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.082), rgba(255, 255, 255, 0.035)),
-    rgba(18, 15, 11, 0.72);
-  box-shadow: 0 34px 120px rgba(0, 0, 0, 0.34);
-  backdrop-filter: blur(28px);
+.memory-map-scroller {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(216, 184, 137, 0.65) rgba(255, 255, 255, 0.08);
 }
 
-.memory-cinematic-block::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  border-radius: inherit;
-  background: radial-gradient(circle at 20% 0%, rgba(215, 185, 139, 0.14), transparent 34%);
+.memory-map-scroller::-webkit-scrollbar {
+  height: 8px;
 }
 
-.memory-scene-image {
-  max-height: 78vh;
-  min-height: 360px;
-  border-radius: 1.9rem;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.32);
-}
-
-.memory-map-shell {
-  overflow: hidden;
-  border-radius: 2.25rem;
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  background: rgba(255, 255, 255, 0.062);
-  box-shadow: 0 30px 110px rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(28px);
-}
-
-.memory-map-frame {
-  position: relative;
-  height: 420px;
-  overflow: hidden;
-  background: #16120d;
-}
-
-.memory-map-iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  filter: saturate(0.78) contrast(1.08) brightness(0.72);
-  transform: scale(1.03);
-}
-
-.memory-map-shade {
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(14, 11, 8, 0.15), rgba(14, 11, 8, 0.72)),
-    radial-gradient(circle at 50% 38%, transparent 0%, rgba(14, 11, 8, 0.18) 58%, rgba(14, 11, 8, 0.62) 100%);
-}
-
-.memory-map-active-card {
-  position: absolute;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
-  border-radius: 1.4rem;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(15, 12, 9, 0.72);
-  padding: 1rem;
-  color: #fff8ed;
-  backdrop-filter: blur(18px);
-}
-
-.memory-map-active-card span,
-.memory-map-active-card small {
-  display: block;
-  color: rgba(233, 220, 200, 0.62);
-}
-
-.memory-map-active-card span {
-  margin-bottom: 0.4rem;
-  font-size: 0.64rem;
-  font-weight: 700;
-  letter-spacing: 0.26em;
-  text-transform: uppercase;
-  color: #d7b98b;
-}
-
-.memory-map-active-card strong {
-  display: block;
-  font-size: 1.35rem;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
-
-.memory-map-active-card small {
-  margin-top: 0.45rem;
-  font-size: 0.78rem;
-}
-
-.memory-map-list {
-  display: grid;
-  gap: 0.55rem;
-  padding: 1rem;
-}
-
-.memory-map-list-item {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.2rem;
-  background: rgba(255, 255, 255, 0.045);
-  padding: 0.78rem;
-  text-align: left;
-  color: rgba(248, 239, 227, 0.7);
-  transition: 220ms ease;
-}
-
-.memory-map-list-item span {
-  display: flex;
-  width: 2rem;
-  height: 2rem;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
+.memory-map-scroller::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: rgba(215, 185, 139, 0.11);
-  color: #d7b98b;
-  font-size: 0.72rem;
-  font-weight: 700;
 }
 
-.memory-map-list-item strong,
-.memory-map-list-item small {
-  display: block;
-}
-
-.memory-map-list-item strong {
-  color: #fff8ed;
-  font-size: 0.92rem;
-}
-
-.memory-map-list-item small {
-  margin-top: 0.12rem;
-  color: rgba(233, 220, 200, 0.52);
-  font-size: 0.76rem;
-}
-
-.memory-map-list-item.is-active {
-  border-color: rgba(215, 185, 139, 0.36);
-  background: rgba(215, 185, 139, 0.12);
-  box-shadow: 0 0 48px rgba(215, 185, 139, 0.09);
-}
-
-.memory-map-empty {
-  display: grid;
-  min-height: 360px;
-  place-items: center;
-  text-align: center;
-  border-radius: 1.7rem;
-  background:
-    radial-gradient(circle at center, rgba(215, 185, 139, 0.16), transparent 36%),
-    linear-gradient(rgba(215, 185, 139, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(215, 185, 139, 0.08) 1px, transparent 1px);
-  background-size: auto, 38px 38px, 38px 38px;
-  padding: 2rem;
-}
-
-.memory-map-empty-dot {
-  width: 1rem;
-  height: 1rem;
-  margin: 0 auto 1.2rem;
+.memory-map-scroller::-webkit-scrollbar-thumb {
+  background: rgba(216, 184, 137, 0.7);
   border-radius: 999px;
-  background: #d7b98b;
-  box-shadow: 0 0 0 10px rgba(215, 185, 139, 0.1), 0 0 44px rgba(215, 185, 139, 0.42);
 }
 
-.memory-map-empty h3 {
-  color: #fff8ed;
-  font-size: 1.55rem;
-  letter-spacing: -0.05em;
+.line-clamp-1,
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.memory-map-empty p {
-  max-width: 18rem;
-  margin: 0.7rem auto 0;
-  color: rgba(233, 220, 200, 0.62);
-  line-height: 1.7;
+.line-clamp-1 {
+  -webkit-line-clamp: 1;
 }
 
-@media (max-width: 640px) {
-  .memory-cinematic-block {
-    border-radius: 1.7rem;
-  }
+.line-clamp-2 {
+  -webkit-line-clamp: 2;
+}
 
-  .memory-scene-image {
-    min-height: 0;
-    max-height: none;
-    border-radius: 1.25rem;
-  }
-
-  .memory-map-frame {
-    height: 330px;
+@media (max-width: 768px) {
+  .memory-map-scroller {
+    scroll-padding-inline: 20px;
   }
 }
