@@ -6,6 +6,7 @@ import VideoUploadForm from "@/components/VideoUploadForm";
 import AudioRecorderForm from "@/components/AudioRecorderForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
 import PhotoLocationButton from "@/components/PhotoLocationButton";
+import ScrollPreserver from "@/components/ScrollPreserver";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -926,6 +927,7 @@ export default async function EditPage({
         </div>
       </section>
     </section>
+    <ScrollPreserver />
   </main>
   );
 }
