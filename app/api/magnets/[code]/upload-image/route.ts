@@ -18,16 +18,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const formData = await request.formData();
 
     const title = String(formData.get("imageTitle") || "").trim();
-    const locationName = String(formData.get("locationName") || "").trim();
-    const latitudeRaw = String(formData.get("latitude") || "").trim();
-    const longitudeRaw = String(formData.get("longitude") || "").trim();
-    const latitude = latitudeRaw ? Number(latitudeRaw) : null;
-    const longitude = longitudeRaw ? Number(longitudeRaw) : null;
-    const hasValidLocation =
-      latitude !== null &&
-      longitude !== null &&
-      Number.isFinite(latitude) &&
-      Number.isFinite(longitude);
     const file = formData.get("imageFile") as File | null;
 
     if (!file || file.size === 0) {
@@ -162,9 +152,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
         item_type: "image",
         title: title || null,
         file_path: filePath,
-        location_name: locationName || null,
-        latitude: hasValidLocation ? latitude : null,
-        longitude: hasValidLocation ? longitude : null,
         sort_order: lastSortOrder + 1,
         is_visible: true,
       },

@@ -69,7 +69,12 @@ export default async function MagnetPage({
     };
 
     return (
-      <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
+
+<>
+<a href="#memory-map-mode" className="map-mode-button">
+  🗺️ Harita Modu
+</a>
+<main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
         <section className="mx-auto flex min-h-[80vh] max-w-2xl flex-col items-center justify-center text-center">
           <p className="mb-4 text-sm uppercase tracking-[0.3em] text-stone-500">
             Story Magnet
