@@ -152,6 +152,37 @@ export default function MemoryMapMode({ lang, items }: Props) {
     });
   }
 
+  function flyTo(targetPoint: { lat: number; lng: number }, targetZoom = 14) {
+    const map = mapInstanceRef.current;
+    if (!map || !window.google?.maps) return;
+
+    const currentZoom = map.getZoom() ?? 10;
+    const currentCenter = map.getCenter();
+
+    // Mevcut ile hedef arasındaki mesafeye göre ara zoom seviyesi hesapla
+    let flyZoom: number;
+    if (currentCenter) {
+      const dLat = Math.abs(currentCenter.lat() - targetPoint.lat);
+      const dLng = Math.abs(currentCenter.lng() - targetPoint.lng);
+      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+      if (dist > 8)       flyZoom = 4;
+      else if (dist > 3)  flyZoom = 5;
+      else if (dist > 1)  flyZoom = 7;
+      else if (dist > 0.2) flyZoom = 9;
+      else                flyZoom = Math.max(currentZoom - 3, 8);
+    } else {
+      flyZoom = Math.max(currentZoom - 4, 5);
+    }
+    flyZoom = Math.min(flyZoom, targetZoom - 1);
+
+    // 1. Zoom out
+    map.setZoom(flyZoom);
+    // 2. Hedef konuma pan (zoom out sırasında)
+    window.setTimeout(() => { map.panTo(targetPoint); }, 200);
+    // 3. Zoom in
+    window.setTimeout(() => { map.setZoom(targetZoom); }, 480);
+  }
+
   function focusItem(index: number, shouldScroll = true, zoom = 14) {
     const item = timelineItems[index];
     if (!item) return;
@@ -167,8 +198,7 @@ export default function MemoryMapMode({ lang, items }: Props) {
 
     const point = itemPoint(item);
     if (point && mapInstanceRef.current) {
-      mapInstanceRef.current.panTo(point);
-      window.setTimeout(() => mapInstanceRef.current?.setZoom(zoom), 160);
+      flyTo(point, zoom);
     }
   }
 
@@ -292,10 +322,8 @@ export default function MemoryMapMode({ lang, items }: Props) {
     if (!open || !mapInstanceRef.current || !activeItem) return;
     updateMarkerIcons(activeIndex);
     const point = itemPoint(activeItem);
-    if (point) {
-      mapInstanceRef.current.panTo(point);
-      window.setTimeout(() => mapInstanceRef.current?.setZoom(14), 120);
-    }
+    if (point) flyTo(point, 14);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex, activeItem, open]);
 
   function handleTimelineScroll() {
