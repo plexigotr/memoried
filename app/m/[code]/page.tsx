@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
 import MemoryMapMode from "@/components/MemoryMapMode";
 import GalleryReveal from "@/components/GalleryReveal";
+import GalleryLightbox from "@/components/GalleryLightbox";
+import AudioPlayer from "@/components/AudioPlayer";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -490,7 +492,9 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
+                    data-lightbox-src={item.signedUrl}
+                    data-lightbox-title={itemTitle || ""}
+                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl cursor-pointer"
                   >
                     <div className="memory-gallery-image-wrap">
                       {/* Blurred backdrop: aynı fotoğraf bulanık arka plan olarak */}
@@ -549,16 +553,10 @@ export default async function MagnetPage({
                     className="gallery-item rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
                     <p className="mb-3 text-xs uppercase tracking-[0.3em] text-stone-400">
-                      Sesli Anı
+                      {currentLang === "en" ? "Voice memory" : "Sesli Anı"}
                     </p>
 
-                    {itemTitle ? (
-                      <h2 className="mb-4 text-lg font-medium text-stone-900">
-                        {itemTitle}
-                      </h2>
-                    ) : null}
-
-                    <audio controls className="w-full" src={item.signedUrl} />
+                    <AudioPlayer src={item.signedUrl} title={itemTitle} lang={currentLang} />
                   </article>
                 );
               }
@@ -597,6 +595,7 @@ export default async function MagnetPage({
       </section>
 
       <GalleryReveal />
+      <GalleryLightbox />
       <p className="pb-10 pt-10 text-center text-[10px] uppercase tracking-[0.35em] text-stone-400">
         {ui.storyCreatedWith}
       </p>

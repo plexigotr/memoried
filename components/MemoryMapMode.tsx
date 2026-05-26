@@ -386,6 +386,24 @@ export default function MemoryMapMode({ lang, items }: Props) {
               </div>
             )}
             {error ? <div className="memoried-map-error">{error}</div> : null}
+
+            {/* Pin preview — aktif öğe fotoğrafsa harita üzerinde mini önizleme */}
+            {activeItem?.itemType === "image" && activeItem?.imageUrl && itemPoint(activeItem) ? (
+              <div key={activeItem.id} className="memoried-pin-preview">
+                <img src={activeItem.imageUrl} alt={getDisplayName(activeItem, lang)} />
+              </div>
+            ) : null}
+          </div>
+
+          {/* Rota ilerleme çubuğu */}
+          <div className="memoried-map-progress">
+            <div
+              className="memoried-map-progress-fill"
+              style={{ width: `${((activeIndex + 1) / timelineItems.length) * 100}%` }}
+            />
+            <span className="memoried-map-progress-label">
+              {activeIndex + 1} / {timelineItems.length}
+            </span>
           </div>
 
           <div ref={timelineRef} className="memoried-map-timeline" onScroll={handleTimelineScroll}>
