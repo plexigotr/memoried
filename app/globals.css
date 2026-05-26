@@ -641,8 +641,9 @@ body.memoried-map-open { overflow: hidden !important; width: 100% !important; to
               max-height 0.4s cubic-bezier(0.4,0,0.2,1) !important;
 }
 
-.memoried-map-canvas-wrap--shrunk {
-  flex-basis: 72px !important;
+/* Two-class selector (0,2,0) beats all single-class (0,1,0) rules incl. media queries */
+.memoried-map-modal .memoried-map-canvas-wrap--shrunk {
+  flex: 0 0 72px !important;
   min-height: 72px !important;
   max-height: 72px !important;
 }
