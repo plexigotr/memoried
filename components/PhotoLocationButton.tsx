@@ -208,7 +208,7 @@ export default function PhotoLocationButton({
       return;
     }
 
-    geocoderRef.current?.geocode({ location: center }, (results) => {
+    geocoderRef.current?.geocode({ location: center }, (results: any[] | null) => {
       const address = results?.[0]?.formatted_address || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
       setSelected({ location_name: address, latitude: String(lat), longitude: String(lng) });
       setQuery(address);
@@ -241,7 +241,7 @@ export default function PhotoLocationButton({
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      (position: GeolocationPosition) => {
         setError("");
         setMapLocation(position.coords.latitude, position.coords.longitude);
       },
