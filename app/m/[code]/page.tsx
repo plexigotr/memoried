@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
 import MemoryMapMode from "@/components/MemoryMapMode";
+import GalleryReveal from "@/components/GalleryReveal";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -377,7 +378,7 @@ export default async function MagnetPage({
           <img
             src={coverImageUrl}
             alt={memoryTitle || ui.coverAlt}
-            className="h-full w-full object-cover"
+            className="memory-cover-image"
             style={{
               objectPosition: `center ${coverPositionPercent}%`,
             }}
@@ -460,7 +461,7 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
+                    className="gallery-item rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
                     {itemTitle ? (
                       <h2 className="mb-3 text-xl font-medium text-stone-900">
@@ -489,7 +490,7 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
+                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
                   >
                     <div className="memory-gallery-image-wrap">
                       {/* Blurred backdrop: aynı fotoğraf bulanık arka plan olarak */}
@@ -519,7 +520,7 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
+                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
                   >
                     <div className="overflow-hidden rounded-2xl">
                       <video
@@ -545,7 +546,7 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
+                    className="gallery-item rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
                     <p className="mb-3 text-xs uppercase tracking-[0.3em] text-stone-400">
                       Sesli Anı
@@ -595,6 +596,7 @@ export default async function MagnetPage({
         </div>
       </section>
 
+      <GalleryReveal />
       <p className="pb-10 pt-10 text-center text-[10px] uppercase tracking-[0.35em] text-stone-400">
         {ui.storyCreatedWith}
       </p>

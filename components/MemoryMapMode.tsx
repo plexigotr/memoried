@@ -177,10 +177,10 @@ export default function MemoryMapMode({ lang, items }: Props) {
 
     // 1. Zoom out
     map.setZoom(flyZoom);
-    // 2. Hedef konuma pan (zoom out sırasında)
-    window.setTimeout(() => { map.panTo(targetPoint); }, 200);
+    // 2. Hedef konuma pan
+    window.setTimeout(() => { map.panTo(targetPoint); }, 350);
     // 3. Zoom in
-    window.setTimeout(() => { map.setZoom(targetZoom); }, 480);
+    window.setTimeout(() => { map.setZoom(targetZoom); }, 820);
   }
 
   function focusItem(index: number, shouldScroll = true, zoom = 14) {
@@ -408,28 +408,18 @@ export default function MemoryMapMode({ lang, items }: Props) {
 
                   {item.itemType === "image" && item.imageUrl ? (
                     <div className="memoried-map-image-frame">
-                      {/* Bulanık arka plan */}
-                      <img
-                        src={item.imageUrl}
-                        alt=""
-                        aria-hidden="true"
-                        className="memoried-map-image-bg"
-                      />
                       <img
                         src={item.imageUrl}
                         alt={title}
                         className="memoried-map-image"
                         style={{ transform: `rotate(${rotation}deg)` }}
                       />
-                      {/* Fotoğraf türü + başlık sol alt overlay */}
-                      <div className="memoried-map-image-caption">
-                        <span className="memoried-map-caption-type">
-                          {lang === "en" ? "Photo" : "Fotoğraf"}
-                        </span>
-                        {title ? (
+                      {/* Sadece başlık — sol alt overlay */}
+                      {title ? (
+                        <div className="memoried-map-image-caption">
                           <span className="memoried-map-caption-title">{title}</span>
-                        ) : null}
-                      </div>
+                        </div>
+                      ) : null}
                     </div>
                   ) : item.itemType === "video" && item.mediaUrl ? (
                     <video controls src={item.mediaUrl} className="memoried-map-media" />
