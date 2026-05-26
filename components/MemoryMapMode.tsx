@@ -45,7 +45,7 @@ function loadGoogleMaps(): Promise<void> {
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=${lang === "en" ? "en" : "tr"}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=${currentLang === "en" ? "en" : "tr"}`;
     script.async = true;
     script.defer = true;
     script.dataset.memoriedGoogleMaps = "1";
@@ -72,7 +72,9 @@ function typeLabel(type: string, lang: "tr" | "en") {
   return lang === "en" ? "Note" : "Not";
 }
 
-export default function MemoryMapMode({ lang, items }: Props) {
+export default function MemoryMapMode({
+  language,
+  lang, items }: Props) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState("");
