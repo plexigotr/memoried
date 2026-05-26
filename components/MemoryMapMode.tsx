@@ -1,5 +1,7 @@
 "use client";
 
+
+import { getValidLocationItems, getItemLatLng, hasRealLocation } from "@/lib/memoryMapSafe";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cleanMemoryNote, shortLocationName } from "@/lib/memoryMapFormat";
 
@@ -114,6 +116,8 @@ const mapStyles = [
 ];
 
 export default function MemoryMapMode({ lang, items }: Props) {
+  const validLocationItems = getValidLocationItems((items || []) as any[]);
+
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState("");
