@@ -1091,6 +1091,75 @@ body.memoried-map-open { overflow: hidden !important; width: 100% !important; to
   text-transform: uppercase;
 }
 
+/* ── Gallery photo caption ── */
+.memory-gallery-caption {
+  padding: 10px 16px 6px;
+  color: rgba(80, 60, 45, 0.68);
+  font-size: 13.5px;
+  line-height: 1.65;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
+/* ── Drag & Drop ── */
+.drag-handle {
+  cursor: grab;
+  color: rgba(120, 100, 85, 0.45);
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+  user-select: none;
+  touch-action: none;
+}
+
+.drag-handle:hover {
+  color: rgba(80, 60, 45, 0.75);
+  background: rgba(120, 100, 85, 0.08);
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.drag-item--dragging {
+  opacity: 0.45;
+  outline: 2px dashed rgba(120, 100, 85, 0.35);
+  outline-offset: 2px;
+}
+
+.drag-item--over {
+  outline: 2px solid #c8893d;
+  outline-offset: 2px;
+}
+
+@keyframes dragSortSpin {
+  to { transform: rotate(360deg); }
+}
+
+.drag-sort-saving {
+  position: fixed;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a1210;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.drag-sort-spinner {
+  animation: dragSortSpin 0.8s linear infinite;
+  opacity: 0.75;
+}
+
 /* ── Ken Burns cover image ── */
 @keyframes kenBurns {
   0%   { transform: scale(1) translateY(0); }

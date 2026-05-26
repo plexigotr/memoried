@@ -484,10 +484,14 @@ export default async function MagnetPage({
                 const rotation = Number(item.rotation || 0);
                 const normalizedRot = ((rotation % 360) + 360) % 360;
                 const isRotated90 = normalizedRot === 90 || normalizedRot === 270;
-                // 90°/270° rotasyonda scale(1.25) ile 4:5 çerçeveyi doldurur
                 const imgTransform = isRotated90
                   ? `rotate(${rotation}deg) scale(1.25)`
                   : rotation !== 0 ? `rotate(${rotation}deg)` : undefined;
+
+                const itemCaption =
+                  currentLang === "en"
+                    ? item.content_text_en || item.content_text_tr || item.content_text
+                    : item.content_text_tr || item.content_text;
 
                 return (
                   <article
@@ -497,7 +501,6 @@ export default async function MagnetPage({
                     className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl cursor-pointer"
                   >
                     <div className="memory-gallery-image-wrap">
-                      {/* Blurred backdrop: aynı fotoğraf bulanık arka plan olarak */}
                       <img
                         src={item.signedUrl}
                         alt=""
@@ -516,6 +519,9 @@ export default async function MagnetPage({
                         </div>
                       ) : null}
                     </div>
+                    {itemCaption ? (
+                      <p className="memory-gallery-caption">{itemCaption}</p>
+                    ) : null}
                   </article>
                 );
               }

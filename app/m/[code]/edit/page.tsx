@@ -7,6 +7,7 @@ import AudioRecorderForm from "@/components/AudioRecorderForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
 import PhotoLocationButton from "@/components/PhotoLocationButton";
 import ScrollPreserver from "@/components/ScrollPreserver";
+import DragSort from "@/components/DragSort";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -668,19 +669,28 @@ export default async function EditPage({
             </div>
 
             {itemsWithUrls.length > 0 ? (
-              <div className="grid gap-5">
+              <div className="drag-sort-list grid gap-5">
                 {itemsWithUrls.map((item) => (
                   <article
                     key={item.id.toString()}
+                    data-item-id={item.id.toString()}
                     className="rounded-3xl border border-stone-200 bg-stone-50/70 p-4 shadow-sm transition hover:bg-stone-50 md:p-5"
                   >
-                    <div className="mb-2 flex items-center justify-between">
-                      <p className="text-xs uppercase tracking-[0.2em] text-stone-500">
-                        {item.item_type}
+                    {/* Drag handle + meta */}
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="drag-handle" title={currentLang === "en" ? "Drag to reorder" : "Sürükleyerek sırala"}>
+                          <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
+                            <path d="M7 4a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2z"/>
+                          </svg>
+                        </div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-stone-500">
+                          {item.item_type}
+                        </p>
+                      </div>
+                      <p className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-medium text-stone-500 shadow-sm">
+                        {ui.order}: {item.sort_order}
                       </p>
-                    <p className="mb-3 inline-flex rounded-full bg-white px-3 py-1 text-xs font-medium text-stone-500 shadow-sm">
-                      {ui.order}: {item.sort_order}
-                    </p>
                     </div>
 
                     {item.title ? (
@@ -742,6 +752,29 @@ export default async function EditPage({
                           </button>
                         </form>
                       </div>
+
+                      {/* Açıklama / Caption */}
+                      <form action={`/api/magnets/${code}/update-item-description`} method="POST" className="rounded-2xl border border-stone-200 bg-white p-4">
+                        <input type="hidden" name="itemId" value={item.id.toString()} />
+                        <label className="block text-sm font-medium text-stone-800">
+                          {currentLang === "en" ? "Caption" : "Açıklama"}
+                        </label>
+                        <p className="mt-0.5 text-xs text-stone-400">
+                          {currentLang === "en"
+                            ? "A short note shown below the photo in the story."
+                            : "Fotoğrafın altında görünen kısa not."}
+                        </p>
+                        <textarea
+                          name="description"
+                          rows={2}
+                          defaultValue={item.content_text || ""}
+                          placeholder={currentLang === "en" ? "e.g. That golden hour in Alaçatı…" : "Örn. Alaçatı'daki o altın saat…"}
+                          className="mt-2 w-full resize-none rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
+                        />
+                        <button type="submit" className="mt-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white">
+                          {currentLang === "en" ? "Save caption" : "Açıklamayı kaydet"}
+                        </button>
+                      </form>
 
                       <form action={`/api/magnets/${code}/set-cover`} method="POST">
                         <input type="hidden" name="itemId" value={item.id.toString()} />
@@ -860,15 +893,19 @@ export default async function EditPage({
                     )}
 
                     <div className="mt-4 flex flex-wrap gap-3">
-                      <form
-                        action={`/api/magnets/${code}/move-item`}
-                        method="POST"
-                      >
-                        <input
-                          type="hidden"
-                          name="itemId"
-                          value={item.id.toString()}
-                        />
+                      <form action={`/api/magnets/${code}/move-item`} method="POST">
+                        <input type="hidden" name="itemId" value={item.id.toString()} />
+                        <input type="hidden" name="direction" value="top" />
+                        <button
+                          type="submit"
+                          className="rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
+                        >
+                          {currentLang === "en" ? "↑ Move to Top" : "↑ En Üste Taşı"}
+                        </button>
+                      </form>
+
+                      <form action={`/api/magnets/${code}/move-item`} method="POST">
+                        <input type="hidden" name="itemId" value={item.id.toString()} />
                         <input type="hidden" name="direction" value="up" />
                         <button
                           type="submit"
@@ -878,15 +915,8 @@ export default async function EditPage({
                         </button>
                       </form>
 
-                      <form
-                        action={`/api/magnets/${code}/move-item`}
-                        method="POST"
-                      >
-                        <input
-                          type="hidden"
-                          name="itemId"
-                          value={item.id.toString()}
-                        />
+                      <form action={`/api/magnets/${code}/move-item`} method="POST">
+                        <input type="hidden" name="itemId" value={item.id.toString()} />
                         <input type="hidden" name="direction" value="down" />
                         <button
                           type="submit"
@@ -896,15 +926,8 @@ export default async function EditPage({
                         </button>
                       </form>
 
-                      <form
-                        action={`/api/magnets/${code}/delete-item`}
-                        method="POST"
-                      >
-                        <input
-                          type="hidden"
-                          name="itemId"
-                          value={item.id.toString()}
-                        />
+                      <form action={`/api/magnets/${code}/delete-item`} method="POST">
+                        <input type="hidden" name="itemId" value={item.id.toString()} />
                         <button
                           type="submit"
                           className="rounded-full border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
@@ -928,6 +951,7 @@ export default async function EditPage({
       </section>
     </section>
     <ScrollPreserver />
+    <DragSort code={code} />
   </main>
   );
 }
