@@ -478,17 +478,32 @@ export default async function MagnetPage({
               }
 
               if (item.item_type === "image" && item.signedUrl) {
+                const rotation = Number(item.rotation || 0);
+                const normalizedRot = ((rotation % 360) + 360) % 360;
+                const isRotated90 = normalizedRot === 90 || normalizedRot === 270;
+                // 90°/270° rotasyonda scale(1.25) ile 4:5 çerçeveyi doldurur
+                const imgTransform = isRotated90
+                  ? `rotate(${rotation}deg) scale(1.25)`
+                  : rotation !== 0 ? `rotate(${rotation}deg)` : undefined;
+
                 return (
                   <article
                     key={item.id.toString()}
                     className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
                   >
                     <div className="memory-gallery-image-wrap">
+                      {/* Blurred backdrop: aynı fotoğraf bulanık arka plan olarak */}
+                      <img
+                        src={item.signedUrl}
+                        alt=""
+                        aria-hidden="true"
+                        className="memory-gallery-image-bg"
+                      />
                       <img
                         src={item.signedUrl}
                         alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
-                        className="memory-gallery-image"
-                        style={{ transform: `rotate(${Number(item.rotation || 0)}deg)` }}
+                        className={`memory-gallery-image${isRotated90 ? " memory-gallery-image--rotated" : ""}`}
+                        style={imgTransform ? { transform: imgTransform } : undefined}
                       />
                       {itemTitle ? (
                         <div className="memory-gallery-title-overlay">

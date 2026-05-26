@@ -70,6 +70,8 @@ function itemPoint(item: MapItem) {
   const lat = toNumber(item.latitude);
   const lng = toNumber(item.longitude);
   if (lat === null || lng === null) return null;
+  // Null Island (0,0) = Atlas Okyanusu — geçersiz konum
+  if (Math.abs(lat) < 0.0001 && Math.abs(lng) < 0.0001) return null;
   return { lat, lng };
 }
 
