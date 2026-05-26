@@ -450,19 +450,20 @@ body {
 }
 
 .memoried-map-image-frame {
+  position: relative;
   width: 100%;
   background: #13100e;
-  aspect-ratio: 4 / 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
+  display: block;
 }
 
 .memoried-map-image {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   transition: transform .25s ease;
 }
@@ -658,18 +659,66 @@ body.memoried-map-open { overflow: hidden !important; width: 100% !important; to
 }
 
 .memoried-map-image-frame {
-  aspect-ratio: 4 / 5 !important;
+  position: relative !important;
+  aspect-ratio: 4 / 3 !important;
   width: 100% !important;
   overflow: hidden !important;
-  background: linear-gradient(135deg, #1b1714, #080706) !important;
+  background: #13100e !important;
+  display: block !important;
+}
+
+/* Harita kartı bulanık arka plan */
+.memoried-map-image-bg {
+  position: absolute !important;
+  inset: -8% !important;
+  width: 116% !important;
+  height: 116% !important;
+  object-fit: cover !important;
+  filter: blur(20px) !important;
+  opacity: 0.55 !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
 }
 
 .memoried-map-image {
+  position: relative !important;
+  z-index: 1 !important;
   width: 100% !important;
   height: 100% !important;
-  object-fit: cover !important;
-  object-position: center center !important;
+  object-fit: contain !important;
   display: block !important;
+}
+
+/* Sol alt overlay: Fotoğraf + başlık */
+.memoried-map-image-caption {
+  position: absolute !important;
+  z-index: 2 !important;
+  left: 12px !important;
+  bottom: 12px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  max-width: calc(100% - 24px) !important;
+}
+
+.memoried-map-caption-type {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.22em !important;
+  text-transform: uppercase !important;
+  color: rgba(216, 164, 95, 0.9) !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6) !important;
+}
+
+.memoried-map-caption-title {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.65) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
 }
 
 @media (min-width: 768px) {

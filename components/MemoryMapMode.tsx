@@ -380,12 +380,28 @@ export default function MemoryMapMode({ lang, items }: Props) {
 
                   {item.itemType === "image" && item.imageUrl ? (
                     <div className="memoried-map-image-frame">
+                      {/* Bulanık arka plan */}
+                      <img
+                        src={item.imageUrl}
+                        alt=""
+                        aria-hidden="true"
+                        className="memoried-map-image-bg"
+                      />
                       <img
                         src={item.imageUrl}
                         alt={title}
                         className="memoried-map-image"
                         style={{ transform: `rotate(${rotation}deg)` }}
                       />
+                      {/* Fotoğraf türü + başlık sol alt overlay */}
+                      <div className="memoried-map-image-caption">
+                        <span className="memoried-map-caption-type">
+                          {lang === "en" ? "Photo" : "Fotoğraf"}
+                        </span>
+                        {title ? (
+                          <span className="memoried-map-caption-title">{title}</span>
+                        ) : null}
+                      </div>
                     </div>
                   ) : item.itemType === "video" && item.mediaUrl ? (
                     <video controls src={item.mediaUrl} className="memoried-map-media" />
@@ -398,28 +414,26 @@ export default function MemoryMapMode({ lang, items }: Props) {
                     <div className="memoried-map-text-card">{note || title}</div>
                   )}
 
-                  <div className="memoried-map-card-copy">
-                    <p className="memoried-map-card-type">
-                      {item.itemType === "audio"
-                        ? lang === "en"
-                          ? "Voice"
-                          : "Ses"
-                        : item.itemType === "video"
-                        ? "Video"
-                        : item.itemType === "text"
-                        ? lang === "en"
-                          ? "Note"
-                          : "Not"
-                        : lang === "en"
-                        ? "Photo"
-                        : "Fotoğraf"}
-                    </p>
-                    <h3>{title}</h3>
-                    {note && item.itemType !== "text" ? <p className="memoried-map-card-note">{note}</p> : null}
-                    {!itemPoint(item) && item.itemType === "image" ? (
+                  {/* Fotoğraflar için metin kutusu gizle (overlay'de gösteriliyor) */}
+                  {item.itemType !== "image" ? (
+                    <div className="memoried-map-card-copy">
+                      <p className="memoried-map-card-type">
+                        {item.itemType === "audio"
+                          ? lang === "en" ? "Voice" : "Ses"
+                          : item.itemType === "video"
+                          ? "Video"
+                          : item.itemType === "text"
+                          ? lang === "en" ? "Note" : "Not"
+                          : lang === "en" ? "Photo" : "Fotoğraf"}
+                      </p>
+                      <h3>{title}</h3>
+                      {note && item.itemType !== "text" ? <p className="memoried-map-card-note">{note}</p> : null}
+                    </div>
+                  ) : !itemPoint(item) ? (
+                    <div className="memoried-map-card-copy">
                       <p className="memoried-map-no-location">{lang === "en" ? "No location yet" : "Konum yok"}</p>
-                    ) : null}
-                  </div>
+                    </div>
+                  ) : null}
                 </div>
               );
             })}
