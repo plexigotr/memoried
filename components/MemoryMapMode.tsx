@@ -45,7 +45,7 @@ function loadGoogleMaps(): Promise<void> {
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=${currentLang === "en" ? "en" : "tr"}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=tr`;
     script.async = true;
     script.defer = true;
     script.dataset.memoriedGoogleMaps = "1";
