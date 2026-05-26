@@ -1,4 +1,5 @@
 import Link from "next/link";
+import MemoryMapMode from "@/components/MemoryMapMode";
 import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
 
@@ -69,12 +70,7 @@ export default async function MagnetPage({
     };
 
     return (
-
-<>
-<a href="#memory-map-mode" className="map-mode-button">
-  🗺️ Harita Modu
-</a>
-<main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
+      <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
         <section className="mx-auto flex min-h-[80vh] max-w-2xl flex-col items-center justify-center text-center">
           <p className="mb-4 text-sm uppercase tracking-[0.3em] text-stone-500">
             Story Magnet
@@ -292,8 +288,31 @@ export default async function MagnetPage({
       )
     : [];
 
+  const mapModeItems = itemsWithUrls.map((item) => {
+    const title =
+      currentLang === "en"
+        ? item.title_en || item.title_tr || item.title
+        : item.title_tr || item.title;
+
+    const note =
+      currentLang === "en"
+        ? item.content_text_en || item.content_text_tr || item.content_text
+        : item.content_text_tr || item.content_text;
+
+    return {
+      id: item.id.toString(),
+      title: title || null,
+      note: note || null,
+      imageUrl: item.item_type === "image" ? item.signedUrl : null,
+      locationName: item.location_name || null,
+      latitude: item.latitude ?? null,
+      longitude: item.longitude ?? null,
+    };
+  });
+
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-stone-900">
+      <MemoryMapMode items={mapModeItems} />
       <div className="fixed right-5 top-5 z-50">
         <details className="relative">
           <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/30 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/40 transition hover:scale-105 active:scale-95">
@@ -313,19 +332,19 @@ export default async function MagnetPage({
             </svg>
           </summary>
 
-          <div className="absolute right-0 mt-3 w-44 overflow-hidden rounded-2xl border border-stone-200 bg-white text-sm text-stone-800 shadow-xl">
+          <div className="absolute right-0 mt-3 w-52 overflow-hidden rounded-2xl border border-stone-200 bg-white text-sm text-stone-800 shadow-xl">
      
             
             <Link
               href={`/m/${magnet.magnet_code}/edit?lang=${currentLang}`}
-              className="block px-4 py-3 transition hover:bg-stone-50"
+              className="block w-full px-4 py-3 text-left transition hover:bg-stone-50"
             >
               {currentLang === "en" ? "Edit" : "Düzenle"}
             </Link>
 
             <Link
               href="/account"
-              className="block border-t border-stone-100 px-4 py-3 transition hover:bg-stone-50"
+              className="block w-full border-t border-stone-100 px-4 py-3 text-left transition hover:bg-stone-50"
             >
               {currentLang === "en" ? "My Account" : "Hesabım"}
             </Link>
@@ -337,7 +356,7 @@ export default async function MagnetPage({
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="block px-4 py-3 transition hover:bg-stone-50"
+            className="block w-full px-4 py-3 text-left transition hover:bg-stone-50"
           >
             {currentLang === "en" ? "Share on WhatsApp" : "WhatsApp ile Paylaş"}
           </a>      
