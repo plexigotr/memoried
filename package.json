@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
     "@google-cloud/storage": "^7.19.0",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",

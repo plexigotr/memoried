@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getSignedImageUrl } from "@/lib/storage";
 import VideoUploadForm from "@/components/VideoUploadForm";
+import VideoTrimButton from "@/components/VideoTrimButton";
 import AudioRecorderForm from "@/components/AudioRecorderForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
 import PhotoLocationButton from "@/components/PhotoLocationButton";
@@ -868,14 +869,21 @@ export default async function EditPage({
                         </form>
                       )}
                     </div>
-                  ) : item.item_type === "video" && item.signedUrl ? (                   
-
+                  ) : item.item_type === "video" && item.signedUrl ? (
+                    <div className="space-y-3">
                       <video
                         controls
                         playsInline
                         className="w-full rounded-2xl border border-stone-200"
                         src={item.signedUrl}
                       />
+                      <VideoTrimButton
+                        videoUrl={item.signedUrl}
+                        itemId={item.id.toString()}
+                        code={code}
+                        lang={currentLang}
+                      />
+                    </div>
                     ) : item.item_type === "audio" && item.signedUrl ? (
                       <audio
                         controls

@@ -88,7 +88,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       const image = sharp(originalBuffer);
       const metadata = await image.metadata();
 
-      const maxWidth = 1600;
+      const maxWidth = 2048;
       let resized = image;
 
       if (metadata.width && metadata.width > maxWidth) {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       processedBuffer = await resized
         .webp({
-          quality: 80,
+          quality: 85,
         })
         .toBuffer();
 
