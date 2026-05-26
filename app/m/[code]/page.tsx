@@ -289,6 +289,7 @@ export default async function MagnetPage({
     : [];
 
   const mapModeItems = itemsWithUrls
+    .filter((item) => ["image", "text", "video", "audio"].includes(item.item_type))
     .map((item) => {
       const itemTitle =
         currentLang === "en"
@@ -302,11 +303,11 @@ export default async function MagnetPage({
 
       return {
         id: item.id.toString(),
-        type: item.item_type,
+        itemType: item.item_type,
         title: itemTitle,
         note: itemNote,
         imageUrl: item.item_type === "image" ? item.signedUrl : null,
-        mediaUrl: item.item_type === "video" || item.item_type === "audio" ? item.signedUrl : null,
+        mediaUrl: item.item_type !== "image" ? item.signedUrl : null,
         locationName: item.location_name || null,
         latitude: item.latitude ?? null,
         longitude: item.longitude ?? null,
@@ -482,20 +483,19 @@ export default async function MagnetPage({
                     key={item.id.toString()}
                     className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
                   >
-                    <img
-                      src={item.signedUrl}
-                      alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
-                      className="w-full rounded-[2rem] object-contain bg-stone-950"
-                      style={{ transform: `rotate(${Number(item.rotation || 0)}deg)` }}
-                    />
-
-                    {itemTitle ? (
-                      <div className="p-5">
-                        <h2 className="text-lg font-medium text-stone-900">
+                    <div className="memory-gallery-image-wrap">
+                      <img
+                        src={item.signedUrl}
+                        alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
+                        className="memory-gallery-image"
+                        style={{ transform: `rotate(${Number(item.rotation || 0)}deg)` }}
+                      />
+                      {itemTitle ? (
+                        <div className="memory-gallery-title-overlay">
                           {itemTitle}
-                        </h2>
-                      </div>
-                    ) : null}
+                        </div>
+                      ) : null}
+                    </div>
                   </article>
                 );
               }

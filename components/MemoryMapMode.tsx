@@ -1,18 +1,20 @@
 "use client";
 
-import { cleanMemoryNote, shortLocationName } from "@/lib/memoryMapFormat";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { cleanMemoryNote, shortLocationName } from "@/lib/memoryMapFormat";
+
+type MemoryKind = "image" | "text" | "video" | "audio" | string;
 
 type MapItem = {
   id: string;
-  type: "text" | "image" | "video" | "audio" | string;
-  title: string;
-  note: string;
-  imageUrl: string | null;
+  itemType?: MemoryKind;
+  title?: string | null;
+  note?: string | null;
+  imageUrl?: string | null;
   mediaUrl?: string | null;
-  locationName: string | null;
-  latitude: number | null;
-  longitude: number | null;
+  locationName?: string | null;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
   rotation?: number | null;
 };
 
@@ -57,19 +59,40 @@ function loadGoogleMaps(): Promise<void> {
   return window.__memoriedGoogleMapsLoading;
 }
 
-function hasLocation(item: MapItem) {
-  return item.latitude !== null && item.longitude !== null && Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude));
+function toNumber(value: number | string | null | undefined) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 function itemPoint(item: MapItem) {
-  return { lat: Number(item.latitude), lng: Number(item.longitude) };
+  const lat = toNumber(item.latitude);
+  const lng = toNumber(item.longitude);
+  if (lat === null || lng === null) return null;
+  return { lat, lng };
 }
 
-function typeLabel(type: string, lang: "tr" | "en") {
-  if (type === "image") return lang === "en" ? "Photo" : "Fotoğraf";
-  if (type === "video") return lang === "en" ? "Video" : "Video";
-  if (type === "audio") return lang === "en" ? "Voice" : "Ses";
-  return lang === "en" ? "Note" : "Not";
+function getDisplayName(item: MapItem, lang: "tr" | "en") {
+  const title = String(item.title || "").trim();
+  if (title) return title;
+  const loc = shortLocationName(item.locationName || "");
+  if (loc) return loc;
+  if (item.itemType === "text") return lang === "en" ? "Memory note" : "Anı notu";
+  if (item.itemType === "audio") return lang === "en" ? "Voice memory" : "Ses anısı";
+  if (item.itemType === "video") return lang === "en" ? "Video memory" : "Video anısı";
+  return lang === "en" ? "Untitled photo" : "İsimsiz fotoğraf";
+}
+
+function buildMarkerIcon(active = false) {
+  const size = active ? 42 : 32;
+  return {
+    path: "M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z",
+    fillColor: active ? "#d8b37a" : "#7b6b59",
+    fillOpacity: 1,
+    strokeColor: "#ffffff",
+    strokeWeight: active ? 2.5 : 1.5,
+    scale: size / 24,
+    anchor: new window.google.maps.Point(12, 22),
+  };
 }
 
 export default function MemoryMapMode({ lang, items }: Props) {
@@ -80,262 +103,235 @@ export default function MemoryMapMode({ lang, items }: Props) {
   const mapInstanceRef = useRef<any | null>(null);
   const markersRef = useRef<any[]>([]);
   const polylineRef = useRef<any | null>(null);
-  const listRef = useRef<HTMLDivElement | null>(null);
-  const cardRefs = useRef<Array<HTMLButtonElement | HTMLDivElement | null>>([]);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const visibleItems = useMemo(() => items.filter((item) => item.imageUrl || item.mediaUrl || item.note || item.title), [items]);
-  const locatedItems = useMemo(() => visibleItems.filter(hasLocation), [visibleItems]);
-  const activeItem = visibleItems[activeIndex] || visibleItems[0];
+  const timelineItems = useMemo(() => items.filter((item) => item.itemType !== "image" || item.imageUrl), [items]);
+  const locatedItems = useMemo(() => timelineItems.filter((item) => itemPoint(item)), [timelineItems]);
+  const activeItem = timelineItems[activeIndex] || timelineItems[0];
 
-  function resetMapObjects() {
-    markersRef.current.forEach((marker) => marker?.setMap?.(null));
-    markersRef.current = [];
-    if (polylineRef.current) {
-      polylineRef.current.setMap(null);
-      polylineRef.current = null;
-    }
-  }
-
-  function drawRouteAndMarkers(map: any) {
-    if (!map || !window.google?.maps) return;
-    resetMapObjects();
-
-    const points = locatedItems.map(itemPoint);
-    if (points.length === 0) return;
-
-    const bounds = new window.google.maps.LatLngBounds();
-    points.forEach((point, index) => {
-      bounds.extend(point);
-      const marker = new window.google.maps.Marker({
-        map,
-        position: point,
-        label: {
-          text: String(index + 1),
-          color: "#ffffff",
-          fontSize: "12px",
-          fontWeight: "700",
-        },
-      });
-      markersRef.current.push(marker);
-    });
-
-    if (points.length > 1) {
-      polylineRef.current = new window.google.maps.Polyline({
-        path: points,
-        geodesic: true,
-        strokeColor: "#d8b37a",
-        strokeOpacity: 0.96,
-        strokeWeight: 4,
-        icons: [
-          {
-            icon: {
-              path: "M 0,-1 0,1",
-              strokeOpacity: 0.95,
-              scale: 3,
-            },
-            offset: "0",
-            repeat: "20px",
-          },
-        ],
-      });
-      polylineRef.current.setMap(map);
-    }
-
-    if (points.length === 1) {
-      map.setCenter(points[0]);
-      map.setZoom(14);
-    } else {
-      map.fitBounds(bounds, 70);
-    }
-  }
-
-  function goToItem(index: number, behavior: ScrollBehavior = "smooth") {
+  function focusItem(index: number, shouldScroll = true) {
+    const item = timelineItems[index];
+    if (!item) return;
     setActiveIndex(index);
-    const item = visibleItems[index];
 
-    cardRefs.current[index]?.scrollIntoView({ behavior, block: "center" });
+    if (shouldScroll) {
+      setTimeout(() => {
+        cardRefs.current[item.id]?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 40);
+    }
 
-    if (item && hasLocation(item) && mapInstanceRef.current) {
-      const point = itemPoint(item);
+    const point = itemPoint(item);
+    if (point && mapInstanceRef.current) {
       mapInstanceRef.current.panTo(point);
-      mapInstanceRef.current.setZoom(14);
+      mapInstanceRef.current.setZoom(11);
     }
   }
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || locatedItems.length === 0) return;
+
+    let cancelled = false;
 
     loadGoogleMaps()
       .then(() => {
+        if (cancelled || !mapRef.current) return;
         setError("");
-        if (!mapRef.current || mapInstanceRef.current) return;
 
-        const firstPoint = locatedItems[0] ? itemPoint(locatedItems[0]) : { lat: 41.0082, lng: 28.9784 };
-        mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-          center: firstPoint,
-          zoom: locatedItems.length ? 8 : 5,
-          disableDefaultUI: true,
-          zoomControl: true,
-          gestureHandling: "greedy",
-          styles: [
-            { elementType: "geometry", stylers: [{ saturation: -8 }, { lightness: 4 }] },
-            { featureType: "poi", stylers: [{ visibility: "simplified" }] },
-          ],
+        const points = locatedItems.map((item) => itemPoint(item)).filter(Boolean) as { lat: number; lng: number }[];
+        const firstPoint = itemPoint(activeItem) || points[0];
+
+        if (!firstPoint) return;
+
+        if (!mapInstanceRef.current) {
+          mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
+            center: firstPoint,
+            zoom: 5,
+            mapTypeId: "roadmap",
+            disableDefaultUI: true,
+            zoomControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            mapTypeControl: false,
+            gestureHandling: "greedy",
+            styles: [
+              { elementType: "geometry", stylers: [{ color: "#ebe6dc" }] },
+              { elementType: "labels.text.fill", stylers: [{ color: "#6b5d4d" }] },
+              { elementType: "labels.text.stroke", stylers: [{ color: "#f7f1e7" }] },
+              { featureType: "water", elementType: "geometry", stylers: [{ color: "#b9cbd0" }] },
+              { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+              { featureType: "poi", stylers: [{ visibility: "off" }] },
+              { featureType: "transit", stylers: [{ visibility: "off" }] },
+            ],
+          });
+        }
+
+        markersRef.current.forEach((marker) => marker.setMap(null));
+        markersRef.current = [];
+
+        if (polylineRef.current) {
+          polylineRef.current.setMap(null);
+          polylineRef.current = null;
+        }
+
+        if (points.length >= 2) {
+          polylineRef.current = new window.google.maps.Polyline({
+            path: points,
+            geodesic: true,
+            strokeColor: "#d8b37a",
+            strokeOpacity: 0.95,
+            strokeWeight: 4,
+            icons: [
+              {
+                icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
+                offset: "0",
+                repeat: "18px",
+              },
+            ],
+          });
+          polylineRef.current.setMap(mapInstanceRef.current);
+        }
+
+        locatedItems.forEach((item) => {
+          const point = itemPoint(item);
+          if (!point) return;
+          const timelineIndex = timelineItems.findIndex((candidate) => candidate.id === item.id);
+          const marker = new window.google.maps.Marker({
+            map: mapInstanceRef.current,
+            position: point,
+            title: getDisplayName(item, lang),
+            icon: buildMarkerIcon(timelineIndex === activeIndex),
+            zIndex: timelineIndex === activeIndex ? 10 : 1,
+          });
+          marker.addListener("click", () => focusItem(timelineIndex, true));
+          markersRef.current.push(marker);
         });
 
-        drawRouteAndMarkers(mapInstanceRef.current);
+        const bounds = new window.google.maps.LatLngBounds();
+        points.forEach((point) => bounds.extend(point));
+        if (points.length > 1) {
+          mapInstanceRef.current.fitBounds(bounds, 52);
+        } else {
+          mapInstanceRef.current.setCenter(points[0]);
+          mapInstanceRef.current.setZoom(11);
+        }
       })
       .catch(() => setError(lang === "en" ? "Map could not be loaded." : "Harita yüklenemedi."));
-  }, [open, lang, locatedItems.length]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, locatedItems, timelineItems, activeIndex, activeItem, lang]);
 
   useEffect(() => {
-    if (!open || !mapInstanceRef.current) return;
-    drawRouteAndMarkers(mapInstanceRef.current);
-  }, [open, locatedItems.length]);
-
-  useEffect(() => {
-    if (!open || !activeItem || !hasLocation(activeItem) || !mapInstanceRef.current) return;
-    mapInstanceRef.current.panTo(itemPoint(activeItem));
-    mapInstanceRef.current.setZoom(14);
-  }, [activeIndex, open]);
-
-  function handleVerticalScroll() {
-    const container = listRef.current;
-    if (!container) return;
-
-    const containerMiddle = container.getBoundingClientRect().top + container.clientHeight * 0.45;
-    let nearestIndex = activeIndex;
-    let nearestDistance = Number.POSITIVE_INFINITY;
-
-    cardRefs.current.forEach((card, index) => {
-      if (!card) return;
-      const rect = card.getBoundingClientRect();
-      const middle = rect.top + rect.height / 2;
-      const distance = Math.abs(middle - containerMiddle);
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = index;
-      }
+    if (!open || !mapInstanceRef.current || !activeItem) return;
+    const point = itemPoint(activeItem);
+    if (point) {
+      mapInstanceRef.current.panTo(point);
+      mapInstanceRef.current.setZoom(11);
+    }
+    markersRef.current.forEach((marker, index) => {
+      const markerItem = locatedItems[index];
+      const timelineIndex = timelineItems.findIndex((candidate) => candidate.id === markerItem?.id);
+      marker.setIcon(buildMarkerIcon(timelineIndex === activeIndex));
+      marker.setZIndex(timelineIndex === activeIndex ? 10 : 1);
     });
+  }, [activeIndex, activeItem, locatedItems, open, timelineItems]);
 
-    if (nearestIndex !== activeIndex) setActiveIndex(nearestIndex);
-  }
-
-  if (visibleItems.length === 0) return null;
+  if (timelineItems.length === 0) return null;
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-white/25 bg-black/65 px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_55px_rgba(0,0,0,.34)] backdrop-blur-2xl transition hover:scale-105 active:scale-95"
-      >
-        <span className="mr-2">🗺️</span>
-        {lang === "en" ? "Open Map Mode" : "Harita Modu"}
+      <button type="button" onClick={() => setOpen(true)} className="memoried-map-launch-button">
+        <span className="text-lg">🗺️</span>
+        <span>{lang === "en" ? "Map Mode" : "Harita Modu"}</span>
       </button>
 
       {open && (
-        <div className="memory-map-mode fixed inset-0 z-[99998] overflow-hidden bg-[#0f0d0a] text-white">
-          <div className="flex h-[100dvh] w-full flex-col overflow-hidden">
-            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-[#0f0d0a]/95 px-5 py-4 backdrop-blur-xl">
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-[0.28em] text-[#d8b37a]/80">
-                  {lang === "en" ? "Memory map" : "Anı haritası"}
-                </p>
-                <h2 className="mt-1 truncate text-xl font-semibold">
-                  {activeItem?.locationName ? shortLocationName(activeItem.locationName) : lang === "en" ? "Memories" : "Anılar"}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="shrink-0 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/85 backdrop-blur-xl"
-              >
-                {lang === "en" ? "Gallery" : "Galeri Modu"}
-              </button>
+        <div className="memoried-map-modal">
+          <div className="memoried-map-topbar">
+            <div className="min-w-0">
+              <p className="memoried-map-eyebrow">{lang === "en" ? "Memory route" : "Anı rotası"}</p>
+              <h2 className="memoried-map-heading">{getDisplayName(activeItem, lang)}</h2>
             </div>
+            <button type="button" onClick={() => setOpen(false)} className="memoried-map-close">
+              {lang === "en" ? "Gallery" : "Galeri"}
+            </button>
+          </div>
 
-            <div className="relative h-[34dvh] min-h-[230px] shrink-0 border-b border-white/10 bg-white/5">
-              {locatedItems.length > 0 ? (
-                <div ref={mapRef} className="h-full w-full" />
-              ) : (
-                <div className="flex h-full items-center justify-center px-6 text-center text-sm text-white/60">
-                  {lang === "en"
-                    ? "No locations added yet. You can add them from edit page."
-                    : "Henüz konum eklenmemiş. Düzenleme sayfasından ekleyebilirsin."}
+          <div className="memoried-map-canvas-wrap">
+            {locatedItems.length > 0 ? (
+              <div ref={mapRef} className="memoried-map-canvas" />
+            ) : (
+              <div className="memoried-map-empty">
+                {lang === "en" ? "No located photos yet." : "Henüz konum eklenmiş fotoğraf yok."}
+              </div>
+            )}
+            {error ? <div className="memoried-map-error">{error}</div> : null}
+          </div>
+
+          <div className="memoried-map-timeline">
+            {timelineItems.map((item, index) => {
+              const title = getDisplayName(item, lang);
+              const note = cleanMemoryNote(item.note || "");
+              const isActive = index === activeIndex;
+              const rotation = Number(item.rotation || 0);
+
+              return (
+                <div
+                  key={item.id}
+                  ref={(node) => {
+                    cardRefs.current[item.id] = node;
+                  }}
+                  className={`memoried-map-story-card ${isActive ? "is-active" : ""}`}
+                  onClick={() => focusItem(index, false)}
+                >
+                  <div className="memoried-map-card-index">{String(index + 1).padStart(2, "0")}</div>
+
+                  {item.itemType === "image" && item.imageUrl ? (
+                    <div className="memoried-map-image-frame">
+                      <img
+                        src={item.imageUrl}
+                        alt={title}
+                        className="memoried-map-image"
+                        style={{ transform: `rotate(${rotation}deg)` }}
+                      />
+                    </div>
+                  ) : item.itemType === "video" && item.mediaUrl ? (
+                    <video controls src={item.mediaUrl} className="memoried-map-media" />
+                  ) : item.itemType === "audio" && item.mediaUrl ? (
+                    <div className="memoried-map-audio-card">
+                      <span>🎧</span>
+                      <audio controls src={item.mediaUrl} className="w-full" />
+                    </div>
+                  ) : (
+                    <div className="memoried-map-text-card">{note || title}</div>
+                  )}
+
+                  <div className="memoried-map-card-copy">
+                    <p className="memoried-map-card-type">
+                      {item.itemType === "audio"
+                        ? lang === "en"
+                          ? "Voice"
+                          : "Ses"
+                        : item.itemType === "video"
+                        ? "Video"
+                        : item.itemType === "text"
+                        ? lang === "en"
+                          ? "Note"
+                          : "Not"
+                        : lang === "en"
+                        ? "Photo"
+                        : "Fotoğraf"}
+                    </p>
+                    <h3>{title}</h3>
+                    {note && item.itemType !== "text" ? <p className="memoried-map-card-note">{note}</p> : null}
+                    {!itemPoint(item) && item.itemType === "image" ? (
+                      <p className="memoried-map-no-location">{lang === "en" ? "No location yet" : "Konum yok"}</p>
+                    ) : null}
+                  </div>
                 </div>
-              )}
-              {error ? <div className="absolute left-4 top-4 rounded-2xl bg-red-500/90 px-4 py-2 text-sm">{error}</div> : null}
-            </div>
-
-            <div
-              ref={listRef}
-              onScroll={handleVerticalScroll}
-              className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-4 pb-28 pt-5"
-            >
-              <div className="mx-auto flex max-w-xl flex-col gap-5">
-                {visibleItems.map((item, index) => {
-                  const isActive = index === activeIndex;
-                  const cleanNote = cleanMemoryNote(item.note);
-                  const rotation = Number(item.rotation || 0);
-
-                  return (
-                    <button
-                      type="button"
-                      key={item.id}
-                      ref={(node) => {
-                        cardRefs.current[index] = node;
-                      }}
-                      onClick={() => goToItem(index)}
-                      className={`group w-full overflow-hidden rounded-[2rem] border text-left transition duration-300 ${
-                        isActive
-                          ? "border-[#d8b37a] bg-white/[0.08] shadow-[0_24px_80px_rgba(216,179,122,.16)]"
-                          : "border-white/10 bg-white/[0.045]"
-                      }`}
-                    >
-                      {item.imageUrl ? (
-                        <div className="relative overflow-hidden bg-black/35">
-                          <img
-                            src={item.imageUrl}
-                            alt={item.title || typeLabel(item.type, lang)}
-                            className="block max-h-[58vh] w-full object-contain transition duration-300"
-                            style={{ transform: `rotate(${rotation}deg)` }}
-                          />
-                          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 to-transparent" />
-                        </div>
-                      ) : item.type === "video" && item.mediaUrl ? (
-                        <video controls src={item.mediaUrl} className="block w-full bg-black" />
-                      ) : item.type === "audio" && item.mediaUrl ? (
-                        <div className="p-5">
-                          <audio controls src={item.mediaUrl} className="w-full" />
-                        </div>
-                      ) : null}
-
-                      <div className="p-5">
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                          <p className="text-[11px] uppercase tracking-[0.24em] text-[#d8b37a]">
-                            {String(index + 1).padStart(2, "0")} · {typeLabel(item.type, lang)}
-                          </p>
-                          {hasLocation(item) ? <span className="h-2 w-2 rounded-full bg-[#d8b37a] shadow-[0_0_16px_rgba(216,179,122,.9)]" /> : null}
-                        </div>
-
-                        <h3 className="text-2xl font-semibold leading-tight text-white">
-                          {item.title || typeLabel(item.type, lang)}
-                        </h3>
-
-                        {item.locationName ? (
-                          <p className="mt-2 text-sm text-white/55">{shortLocationName(item.locationName)}</p>
-                        ) : null}
-
-                        {cleanNote ? (
-                          <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-white/70">{cleanNote}</p>
-                        ) : null}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       )}

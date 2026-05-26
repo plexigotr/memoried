@@ -7,10 +7,15 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params;
-    const numericId = BigInt(id);
+
+    if (!id || !/^\d+$/.test(id)) {
+      return NextResponse.json({ error: "Geçersiz fotoğraf." }, { status: 400 });
+    }
+
+    const itemId = BigInt(id);
 
     const current = await prisma.memory_items.findUnique({
-      where: { id: numericId },
+      where: { id: itemId },
       select: { id: true, rotation: true },
     });
 
@@ -21,7 +26,7 @@ export async function POST(
     const nextRotation = ((current.rotation || 0) + 90) % 360;
 
     const updated = await prisma.memory_items.update({
-      where: { id: numericId },
+      where: { id: itemId },
       data: { rotation: nextRotation },
       select: { id: true, rotation: true },
     });

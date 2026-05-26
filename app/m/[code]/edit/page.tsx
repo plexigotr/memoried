@@ -6,7 +6,6 @@ import VideoUploadForm from "@/components/VideoUploadForm";
 import AudioRecorderForm from "@/components/AudioRecorderForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
 import PhotoLocationButton from "@/components/PhotoLocationButton";
-import RotatePhotoButton from "@/components/RotatePhotoButton";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -701,8 +700,8 @@ export default async function EditPage({
                         <img
                           src={item.signedUrl}
                           alt={item.title || ui.imageAlt}
-                          className="w-full rounded-2xl object-contain bg-stone-950"
-                          style={{ transform: `rotate(${Number(item.rotation || 0)}deg)` }}
+                          className="w-full rounded-2xl"
+                          style={{ transform: `rotate(${Number(item.rotation || 0)}deg)`, transition: "transform .25s ease" }}
                         />
 
                         {memory.cover_image_path === item.file_path && (
@@ -710,6 +709,37 @@ export default async function EditPage({
                             {currentLang === "en" ? "Cover" : "Kapak"}
                           </span>
                         )}
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <form action={`/api/magnets/${code}/update-item-title`} method="POST" className="rounded-2xl border border-stone-200 bg-white p-4">
+                          <input type="hidden" name="itemId" value={item.id.toString()} />
+                          <label className="block text-sm font-medium text-stone-800">
+                            {currentLang === "en" ? "Photo name" : "Fotoğraf adı"}
+                          </label>
+                          <input
+                            name="title"
+                            defaultValue={itemTitle || ""}
+                            placeholder={currentLang === "en" ? "Example: Alaçatı sunset" : "Örn. Alaçatı gün batımı"}
+                            className="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
+                          />
+                          <button type="submit" className="mt-3 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white">
+                            {currentLang === "en" ? "Save name" : "Adı kaydet"}
+                          </button>
+                        </form>
+
+                        <form action={`/api/magnets/${code}/rotate-item`} method="POST" className="rounded-2xl border border-stone-200 bg-white p-4">
+                          <input type="hidden" name="itemId" value={item.id.toString()} />
+                          <p className="text-sm font-medium text-stone-800">
+                            {currentLang === "en" ? "Photo rotation" : "Fotoğraf döndürme"}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-stone-500">
+                            {currentLang === "en" ? "Rotate the photo 90° clockwise." : "Fotoğrafı saat yönünde 90° döndür."}
+                          </p>
+                          <button type="submit" className="mt-3 rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100">
+                            ↻ {currentLang === "en" ? "Rotate" : "Döndür"}
+                          </button>
+                        </form>
                       </div>
 
                       <form action={`/api/magnets/${code}/set-cover`} method="POST">
@@ -732,10 +762,6 @@ export default async function EditPage({
                             : "Kapak Yap"}
                         </button>
                       </form>
-
-                      <div className="flex flex-wrap gap-2">
-                        <RotatePhotoButton itemId={item.id.toString()} lang={currentLang} />
-                      </div>
 
                       <div className="rounded-2xl border border-stone-200 bg-white p-4">
                         <div className="mb-3">

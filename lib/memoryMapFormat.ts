@@ -41,18 +41,12 @@ export function shortLocationName(value: unknown): string {
     .filter((p) => !/^no[:\s]/i.test(p))
     .filter((p) => !/sokak|cadde|mahallesi|mah\.|no:/i.test(p));
 
-  const turkeyIndex = parts.findIndex((p) => /türkiye|turkey/i.test(p));
-  const beforeCountry = turkeyIndex >= 0 ? parts.slice(0, turkeyIndex) : parts;
-
-  // Prefer district/city when available
+  const countryIndex = parts.findIndex((p) => /türkiye|turkey|greece|italy|france|spain|germany|macedonia|bulgaria|romania|albania|croatia|serbia/i.test(p));
+  const beforeCountry = countryIndex >= 0 ? parts.slice(0, countryIndex) : parts;
   const cityLike = beforeCountry.filter((p) => !/\d/.test(p));
-  if (cityLike.length >= 2) {
-    return cityLike.slice(-2).join(", ");
-  }
-  if (cityLike.length === 1) {
-    return turkeyIndex >= 0 ? `${cityLike[0]}, Türkiye` : cityLike[0];
-  }
 
+  if (cityLike.length >= 2) return cityLike.slice(-2).join(", ");
+  if (cityLike.length === 1) return cityLike[0];
   if (beforeCountry.length >= 2) return beforeCountry.slice(-2).join(", ");
   if (beforeCountry.length === 1) return beforeCountry[0];
   return text;
