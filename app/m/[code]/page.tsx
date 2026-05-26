@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
-import MemoryMapMode from "@/components/MemoryMapMode";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -288,35 +287,9 @@ export default async function MagnetPage({
       )
     : [];
 
-  const mapPhotoItems = itemsWithUrls
-    .filter((item) => item.item_type === "image" && item.signedUrl)
-    .map((item) => {
-      const title =
-        currentLang === "en"
-          ? item.title_en || item.title_tr || item.title || ""
-          : item.title_tr || item.title || "";
-
-      const note =
-        currentLang === "en"
-          ? item.content_text_en || item.content_text_tr || item.content_text || ""
-          : item.content_text_tr || item.content_text || "";
-
-      return {
-        id: item.id.toString(),
-        title,
-        note,
-        imageUrl: item.signedUrl as string,
-        locationName: item.location_name || "",
-        latitude: typeof item.latitude === "number" ? item.latitude : null,
-        longitude: typeof item.longitude === "number" ? item.longitude : null,
-      };
-    });
-
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-stone-900">
-      <MemoryMapMode items={mapPhotoItems} lang={currentLang} />
-
-      <div className="fixed left-5 top-5 z-50">
+      <div className="fixed right-5 top-5 z-50">
         <details className="relative">
           <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/30 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/40 transition hover:scale-105 active:scale-95">
             <svg

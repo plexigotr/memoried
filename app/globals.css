@@ -25,42 +25,52 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-.memory-map-scroller {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(216, 184, 137, 0.65) rgba(255, 255, 255, 0.08);
+
+
+/* Premium Map Mode */
+.map-mode-button{
+  position:fixed;
+  top:18px;
+  right:18px;
+  z-index:9999;
+  background:rgba(15,15,15,.75);
+  border:1px solid rgba(255,255,255,.12);
+  backdrop-filter:blur(14px);
+  color:#fff;
+  border-radius:999px;
+  padding:12px 18px;
+  font-weight:600;
+  box-shadow:0 10px 30px rgba(0,0,0,.25);
 }
 
-.memory-map-scroller::-webkit-scrollbar {
-  height: 8px;
+.account-button,
+.header-account{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  white-space:nowrap;
 }
 
-.memory-map-scroller::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
+.memory-thumbnail-strip{
+  display:flex;
+  gap:14px;
+  overflow-x:auto;
+  padding:18px;
+  scroll-snap-type:x mandatory;
 }
 
-.memory-map-scroller::-webkit-scrollbar-thumb {
-  background: rgba(216, 184, 137, 0.7);
-  border-radius: 999px;
+.memory-thumbnail{
+  min-width:180px;
+  height:240px;
+  border-radius:22px;
+  overflow:hidden;
+  scroll-snap-align:center;
+  background:#111;
+  border:1px solid rgba(255,255,255,.08);
 }
 
-.line-clamp-1,
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-1 {
-  -webkit-line-clamp: 1;
-}
-
-.line-clamp-2 {
-  -webkit-line-clamp: 2;
-}
-
-@media (max-width: 768px) {
-  .memory-map-scroller {
-    scroll-padding-inline: 20px;
-  }
+.memory-thumbnail img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
 }
