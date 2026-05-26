@@ -498,7 +498,7 @@ export default async function MagnetPage({
                     key={item.id.toString()}
                     data-lightbox-src={item.signedUrl}
                     data-lightbox-title={itemTitle || ""}
-                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl cursor-pointer"
+                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/80 shadow-[0_28px_72px_rgba(100,70,40,0.17),0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur-xl cursor-pointer"
                   >
                     <div className="memory-gallery-image-wrap">
                       <img
@@ -530,19 +530,16 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
+                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/80 shadow-[0_28px_72px_rgba(100,70,40,0.17),0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur-xl"
                   >
-                    <div className="overflow-hidden rounded-2xl">
-                      <video
-                        controls
-                        src={item.signedUrl}
-                        poster={`${item.signedUrl}#t=2`}
-                        className="w-full rounded-[2rem]"
-                      />
-                    </div>
+                    <video
+                      controls
+                      src={item.signedUrl}
+                      className="w-full block"
+                    />
 
                     {itemTitle ? (
-                      <div className="p-5">
+                      <div className="px-5 py-4">
                         <h2 className="text-lg font-medium text-stone-900">
                           {itemTitle}
                         </h2>

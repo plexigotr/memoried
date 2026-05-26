@@ -440,7 +440,34 @@ export default function MemoryMapMode({ lang, items }: Props) {
                       ) : null}
                     </div>
                   ) : item.itemType === "video" && item.mediaUrl ? (
-                    <video controls src={item.mediaUrl} className="memoried-map-media" />
+                    <div
+                      className="memoried-map-video-preview"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <video
+                        src={item.mediaUrl}
+                        className="memoried-map-media"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        onClick={(e) => {
+                          const v = e.currentTarget;
+                          const wrap = v.closest(".memoried-map-video-preview") as HTMLElement | null;
+                          v.muted = false;
+                          v.loop = false;
+                          v.controls = true;
+                          v.play();
+                          wrap?.classList.add("memoried-map-video-preview--playing");
+                        }}
+                      />
+                      <div className="memoried-map-video-tap-hint" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                        {lang === "en" ? "Tap for sound" : "Sesi aç"}
+                      </div>
+                    </div>
                   ) : item.itemType === "audio" && item.mediaUrl ? (
                     <div className="memoried-map-audio-card">
                       <span>🎧</span>

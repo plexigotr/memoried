@@ -6,14 +6,24 @@ const KEY = "edit-scroll-y";
 
 export default function ScrollPreserver() {
   useEffect(() => {
+    // Tarayıcının kendi scroll geri yüklemesini devre dışı bırak
+    if ("scrollRestoration" in history) {
+      history.scrollRestoration = "manual";
+    }
+
     const saved = sessionStorage.getItem(KEY);
     if (saved !== null) {
       const y = parseInt(saved, 10);
       sessionStorage.removeItem(KEY);
-      // rAF çift çağrısı: layout + paint bitmeden scroll uygulanırsa sıfırlanır
+
+      const apply = () => window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior });
+
+      // 3 kez uygula: layout, paint ve geç yüklenen içerik için
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior });
+          apply();
+          setTimeout(apply, 60);
+          setTimeout(apply, 220);
         });
       });
     }
