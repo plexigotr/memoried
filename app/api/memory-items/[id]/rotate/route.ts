@@ -7,11 +7,7 @@ export async function POST(
 ) {
   try {
     const { id } = await context.params;
-    const numericId = Number(id);
-
-    if (!Number.isFinite(numericId)) {
-      return NextResponse.json({ error: "Geçersiz fotoğraf." }, { status: 400 });
-    }
+    const numericId = BigInt(id);
 
     const current = await prisma.memory_items.findUnique({
       where: { id: numericId },

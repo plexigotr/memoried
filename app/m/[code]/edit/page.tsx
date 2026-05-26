@@ -6,6 +6,7 @@ import VideoUploadForm from "@/components/VideoUploadForm";
 import AudioRecorderForm from "@/components/AudioRecorderForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
 import PhotoLocationButton from "@/components/PhotoLocationButton";
+import RotatePhotoButton from "@/components/RotatePhotoButton";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -700,7 +701,8 @@ export default async function EditPage({
                         <img
                           src={item.signedUrl}
                           alt={item.title || ui.imageAlt}
-                          className="w-full rounded-2xl"
+                          className="w-full rounded-2xl object-contain bg-stone-950"
+                          style={{ transform: `rotate(${Number(item.rotation || 0)}deg)` }}
                         />
 
                         {memory.cover_image_path === item.file_path && (
@@ -730,6 +732,10 @@ export default async function EditPage({
                             : "Kapak Yap"}
                         </button>
                       </form>
+
+                      <div className="flex flex-wrap gap-2">
+                        <RotatePhotoButton itemId={item.id.toString()} lang={currentLang} />
+                      </div>
 
                       <div className="rounded-2xl border border-stone-200 bg-white p-4">
                         <div className="mb-3">

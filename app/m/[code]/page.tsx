@@ -306,7 +306,7 @@ export default async function MagnetPage({
         title: itemTitle,
         note: itemNote,
         imageUrl: item.item_type === "image" ? item.signedUrl : null,
-        mediaUrl: item.item_type === "audio" || item.item_type === "video" ? item.signedUrl : null,
+        mediaUrl: item.item_type === "video" || item.item_type === "audio" ? item.signedUrl : null,
         locationName: item.location_name || null,
         latitude: item.latitude ?? null,
         longitude: item.longitude ?? null,
@@ -439,7 +439,7 @@ export default async function MagnetPage({
         )}
       </section>
 
-      <section id="gallery-mode" className="px-6 py-16">
+      <section className="px-6 py-16">
         <div className="mx-auto max-w-3xl space-y-10">
           {itemsWithUrls.length > 0 ? (
             itemsWithUrls.map((item) => {
@@ -485,7 +485,8 @@ export default async function MagnetPage({
                     <img
                       src={item.signedUrl}
                       alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
-                      className="w-full rounded-[2rem] object-contain bg-stone-950" style={{ transform: `rotate(${item.rotation || 0}deg)`, transition: "transform .25s ease" }}
+                      className="w-full rounded-[2rem] object-contain bg-stone-950"
+                      style={{ transform: `rotate(${Number(item.rotation || 0)}deg)` }}
                     />
 
                     {itemTitle ? (
