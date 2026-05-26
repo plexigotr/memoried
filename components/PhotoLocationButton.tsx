@@ -189,7 +189,7 @@ export default function PhotoLocationButton({
           input: query,
           componentRestrictions: { country: "tr" },
         },
-        (results) => setPredictions(results || [])
+        (results: google.maps.places.AutocompletePrediction[] | null) => setPredictions(results || [])
       );
     }, 250);
 
@@ -223,7 +223,7 @@ export default function PhotoLocationButton({
         placeId: prediction.place_id,
         fields: ["name", "formatted_address", "geometry"],
       },
-      (place, status) => {
+      (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) => {
         if (status !== window.google?.maps.places.PlacesServiceStatus.OK || !place?.geometry?.location) return;
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
