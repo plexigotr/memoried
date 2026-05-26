@@ -130,7 +130,7 @@ export default function MemoryMapMode({ lang, items }: Props) {
   const routeLineRef = useRef<any[]>([]);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const timelineItems = useMemo(() => items.filter((item) => item.itemType !== "image" || item.imageUrl), [items]);
+  const timelineItems = useMemo(() => items.filter((item) => item.itemType !== "video" && (item.itemType !== "image" || item.imageUrl)), [items]);
   const locatedItems = useMemo(() => timelineItems.filter((item) => itemPoint(item)), [timelineItems]);
   const activeItem = timelineItems[activeIndex] || timelineItems[0];
 

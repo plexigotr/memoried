@@ -293,7 +293,7 @@ export default async function MagnetPage({
     : [];
 
   const mapModeItems = itemsWithUrls
-    .filter((item) => ["image", "text", "video", "audio"].includes(item.item_type))
+    .filter((item) => ["image", "text", "audio"].includes(item.item_type))
     .map((item) => {
       const itemTitle =
         currentLang === "en"
