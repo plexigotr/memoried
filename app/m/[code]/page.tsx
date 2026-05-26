@@ -289,7 +289,6 @@ export default async function MagnetPage({
     : [];
 
   const mapModeItems = itemsWithUrls
-    .filter((item) => item.item_type === "image")
     .map((item) => {
       const itemTitle =
         currentLang === "en"
@@ -303,12 +302,15 @@ export default async function MagnetPage({
 
       return {
         id: item.id.toString(),
+        type: item.item_type,
         title: itemTitle,
         note: itemNote,
-        imageUrl: item.signedUrl,
+        imageUrl: item.item_type === "image" ? item.signedUrl : null,
+        mediaUrl: item.item_type === "audio" || item.item_type === "video" ? item.signedUrl : null,
         locationName: item.location_name || null,
         latitude: item.latitude ?? null,
         longitude: item.longitude ?? null,
+        rotation: item.rotation ?? 0,
       };
     });
 
@@ -437,7 +439,7 @@ export default async function MagnetPage({
         )}
       </section>
 
-      <section className="px-6 py-16">
+      <section id="gallery-mode" className="px-6 py-16">
         <div className="mx-auto max-w-3xl space-y-10">
           {itemsWithUrls.length > 0 ? (
             itemsWithUrls.map((item) => {
@@ -483,7 +485,7 @@ export default async function MagnetPage({
                     <img
                       src={item.signedUrl}
                       alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
-                      className="w-full rounded-[2rem] object-cover"
+                      className="w-full rounded-[2rem] object-contain bg-stone-950" style={{ transform: `rotate(${item.rotation || 0}deg)`, transition: "transform .25s ease" }}
                     />
 
                     {itemTitle ? (

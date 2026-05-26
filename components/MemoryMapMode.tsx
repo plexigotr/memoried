@@ -1,17 +1,19 @@
 "use client";
 
-
 import { cleanMemoryNote, shortLocationName } from "@/lib/memoryMapFormat";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type MapItem = {
   id: string;
+  type?: string;
   title: string;
   note: string;
   imageUrl: string | null;
+  mediaUrl?: string | null;
   locationName: string | null;
   latitude: number | null;
   longitude: number | null;
+  rotation?: number | null;
 };
 
 type Props = {
@@ -43,7 +45,7 @@ function loadGoogleMaps(): Promise<void> {
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=tr`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=places&language=${document.documentElement.lang || "tr"}`;
     script.async = true;
     script.defer = true;
     script.dataset.memoriedGoogleMaps = "1";
@@ -55,139 +57,311 @@ function loadGoogleMaps(): Promise<void> {
   return window.__memoriedGoogleMapsLoading;
 }
 
+function hasLocation(item?: MapItem | null) {
+  return !!item && item.latitude !== null && item.longitude !== null && Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude));
+}
+
+function pointOf(item: MapItem) {
+  return { lat: Number(item.latitude), lng: Number(item.longitude) };
+}
+
 export default function MemoryMapMode({ lang, items }: Props) {
-  const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState("");
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const mapInstanceRef = useRef<any | null>(null);
-  const markerRef = useRef<any | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [rotations, setRotations] = useState<Record<string, number>>(() => {
+    const initial: Record<string, number> = {};
+    items.forEach((item) => {
+      initial[item.id] = Number(item.rotation || 0);
+    });
+    return initial;
+  });
 
-  const locatedItems = useMemo(
-    () => items.filter((item) => item.imageUrl && item.latitude !== null && item.longitude !== null),
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<Record<string, HTMLElement | null>>({});
+  const mapInstanceRef = useRef<any | null>(null);
+  const markersRef = useRef<any[]>([]);
+  const polylineRef = useRef<any | null>(null);
+  const didFitRef = useRef(false);
+
+  const visibleItems = useMemo(
+    () => items.filter((item) => item.imageUrl || item.type === "text" || item.type === "audio" || item.type === "video"),
     [items]
   );
 
-  const visibleItems = locatedItems.length > 0 ? locatedItems : items.filter((item) => item.imageUrl);
+  const locatedItems = useMemo(() => visibleItems.filter(hasLocation), [visibleItems]);
   const activeItem = visibleItems[activeIndex] || visibleItems[0];
+  const activeLocationTitle = hasLocation(activeItem)
+    ? shortLocationName(activeItem.locationName || "")
+    : locatedItems[0]
+    ? shortLocationName(locatedItems[0].locationName || "")
+    : lang === "en"
+    ? "Memory map"
+    : "Anı haritası";
 
   useEffect(() => {
-    if (!open || !activeItem?.latitude || !activeItem?.longitude) return;
+    if (visibleItems.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const best = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+
+        const raw = best?.target?.getAttribute("data-map-card-index");
+        const next = Number(raw);
+
+        if (Number.isFinite(next) && next >= 0 && next < visibleItems.length) {
+          setActiveIndex(next);
+        }
+      },
+      {
+        threshold: [0.35, 0.55, 0.75],
+        rootMargin: "-16% 0px -42% 0px",
+      }
+    );
+
+    Object.values(cardRefs.current).forEach((node) => {
+      if (node) observer.observe(node);
+    });
+
+    return () => observer.disconnect();
+  }, [visibleItems.length]);
+
+  useEffect(() => {
+    if (locatedItems.length === 0) return;
 
     loadGoogleMaps()
       .then(() => {
         setError("");
-        const center = { lat: Number(activeItem.latitude), lng: Number(activeItem.longitude) };
+
+        const firstCenter = hasLocation(activeItem) ? pointOf(activeItem) : pointOf(locatedItems[0]);
 
         if (mapRef.current && !mapInstanceRef.current) {
           mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
-            center,
-            zoom: 14,
+            center: firstCenter,
+            zoom: 12,
             disableDefaultUI: true,
             zoomControl: true,
             gestureHandling: "greedy",
+            clickableIcons: false,
+            styles: [
+              { elementType: "geometry", stylers: [{ color: "#ebe3d7" }] },
+              { elementType: "labels.text.fill", stylers: [{ color: "#5d5144" }] },
+              { elementType: "labels.text.stroke", stylers: [{ color: "#f7f1e7" }] },
+              { featureType: "poi", stylers: [{ visibility: "simplified" }] },
+              { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+              { featureType: "water", elementType: "geometry", stylers: [{ color: "#d7e5e8" }] },
+            ],
           });
-          markerRef.current = new window.google.maps.Marker({ map: mapInstanceRef.current, position: center });
-        } else {
-          mapInstanceRef.current?.panTo(center);
-          mapInstanceRef.current?.setZoom(14);
-          markerRef.current?.setPosition(center);
+        }
+
+        markersRef.current.forEach((marker) => marker.setMap(null));
+        markersRef.current = [];
+
+        locatedItems.forEach((item, index) => {
+          const originalIndex = visibleItems.findIndex((memory) => memory.id === item.id);
+          const marker = new window.google.maps.Marker({
+            map: mapInstanceRef.current,
+            position: pointOf(item),
+            title: shortLocationName(item.locationName || item.title || ""),
+            label: {
+              text: String(index + 1),
+              color: "#1f160d",
+              fontWeight: "800",
+              fontSize: "12px",
+            },
+          });
+
+          marker.addListener("click", () => {
+            if (originalIndex >= 0) {
+              setActiveIndex(originalIndex);
+              cardRefs.current[item.id]?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          });
+
+          markersRef.current.push(marker);
+        });
+
+        if (polylineRef.current) {
+          polylineRef.current.setMap(null);
+          polylineRef.current = null;
+        }
+
+        const routePath = locatedItems.map(pointOf);
+        if (routePath.length >= 2) {
+          polylineRef.current = new window.google.maps.Polyline({
+            path: routePath,
+            geodesic: true,
+            strokeColor: "#d6ad72",
+            strokeOpacity: 0.95,
+            strokeWeight: 4,
+            icons: [
+              {
+                icon: {
+                  path: "M 0,-1 0,1",
+                  strokeOpacity: 1,
+                  scale: 3,
+                },
+                offset: "0",
+                repeat: "20px",
+              },
+            ],
+          });
+          polylineRef.current.setMap(mapInstanceRef.current);
+        }
+
+        if (!didFitRef.current && routePath.length > 0) {
+          const bounds = new window.google.maps.LatLngBounds();
+          routePath.forEach((point) => bounds.extend(point));
+          mapInstanceRef.current.fitBounds(bounds, 70);
+          didFitRef.current = true;
         }
       })
       .catch(() => setError(lang === "en" ? "Map could not be loaded." : "Harita yüklenemedi."));
-  }, [open, activeItem, lang]);
+  }, [locatedItems, visibleItems, activeItem, lang]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !hasLocation(activeItem)) return;
+    mapInstanceRef.current.panTo(pointOf(activeItem));
+    mapInstanceRef.current.setZoom(14);
+  }, [activeItem]);
+
+  async function rotatePhoto(item: MapItem) {
+    const current = rotations[item.id] ?? Number(item.rotation || 0);
+    const next = (current + 90) % 360;
+
+    setRotations((previous) => ({ ...previous, [item.id]: next }));
+
+    try {
+      const response = await fetch(`/api/memory-items/${item.id}/rotate`, { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        if (typeof data.rotation === "number") {
+          setRotations((previous) => ({ ...previous, [item.id]: data.rotation }));
+        }
+      }
+    } catch {
+      // Görsel kullanıcı tarafında dönmüş kalır; kalıcı kaydedilemezse sayfa yenilenince eski haline döner.
+    }
+  }
+
+  function jumpTo(index: number) {
+    const item = visibleItems[index];
+    if (!item) return;
+
+    setActiveIndex(index);
+    cardRefs.current[item.id]?.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    if (hasLocation(item) && mapInstanceRef.current) {
+      mapInstanceRef.current.panTo(pointOf(item));
+      mapInstanceRef.current.setZoom(14);
+    }
+  }
 
   if (visibleItems.length === 0) return null;
 
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="fixed right-5 top-20 z-50 rounded-full border border-white/25 bg-black/55 px-4 py-3 text-sm font-semibold text-white shadow-2xl backdrop-blur-xl transition hover:scale-105 active:scale-95"
-      >
-        🗺️ {lang === "en" ? "Map Mode" : "Harita Modu"}
-      </button>
+    <section id="map-mode" className="memoried-map-mode-root">
+      <div className="memoried-map-topbar">
+        <div>
+          <p>{lang === "en" ? "Memory route" : "Anı rotası"}</p>
+          <h2>{activeLocationTitle}</h2>
+        </div>
 
-      {open && (
-        <div className="fixed inset-0 z-[99998] bg-[#0f0d0a] text-white">
-          <div className="flex h-full flex-col">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-white/45">
-                  {lang === "en" ? "Memory map" : "Anı haritası"}
-                </p>
-                <h2 className="mt-1 text-xl font-semibold">
-                  {activeItem?.locationName || (lang === "en" ? "Photos" : "Fotoğraflar")}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white/80"
-              >
-                {lang === "en" ? "Close" : "Kapat"}
-              </button>
-            </div>
+        <a href="#gallery-mode" className="memoried-gallery-mode-button">
+          {lang === "en" ? "Gallery Mode" : "Galeri Modu"}
+        </a>
+      </div>
 
-            <div className="h-[33vh] min-h-[220px] border-b border-white/10 bg-white/5">
-              {activeItem?.latitude && activeItem?.longitude ? (
-                <div ref={mapRef} className="h-full w-full" />
-              ) : (
-                <div className="flex h-full items-center justify-center px-6 text-center text-sm text-white/60">
-                  {lang === "en"
-                    ? "This photo has no location yet. You can add it from edit page."
-                    : "Bu fotoğrafa henüz konum eklenmemiş. Düzenleme sayfasından ekleyebilirsin."}
+      <div className="memoried-map-canvas-wrap">
+        {locatedItems.length > 0 ? (
+          <div ref={mapRef} className="memoried-map-canvas" />
+        ) : (
+          <div className="memoried-map-empty">
+            {lang === "en"
+              ? "No locations have been added yet. Photos can still be viewed below."
+              : "Henüz konum eklenmemiş. Fotoğraflar aşağıda görüntülenebilir."}
+          </div>
+        )}
+
+        {error ? <div className="memoried-map-error">{error}</div> : null}
+      </div>
+
+      <div className="memoried-active-memory">
+        <p>{lang === "en" ? "Selected memory" : "Seçili anı"}</p>
+        <h3>{activeItem?.title || (lang === "en" ? "Untitled memory" : "İsimsiz anı")}</h3>
+        {cleanMemoryNote(activeItem?.note) ? <span>{cleanMemoryNote(activeItem?.note)}</span> : null}
+        {hasLocation(activeItem) ? <small>{shortLocationName(activeItem.locationName || "")}</small> : null}
+      </div>
+
+      <div className="memoried-map-vertical-feed">
+        {visibleItems.map((item, index) => {
+          const isActive = index === activeIndex;
+          const rotation = rotations[item.id] ?? Number(item.rotation || 0);
+          const note = cleanMemoryNote(item.note);
+
+          return (
+            <article
+              key={item.id}
+              ref={(node) => {
+                cardRefs.current[item.id] = node;
+              }}
+              data-map-card-index={index}
+              className={`memoried-map-card ${isActive ? "is-active" : ""}`}
+              onClick={() => jumpTo(index)}
+            >
+              <div className="memoried-map-card-head">
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <div>
+                  <strong>{item.title || (lang === "en" ? "Memory" : "Anı")}</strong>
+                  <small>
+                    {hasLocation(item)
+                      ? shortLocationName(item.locationName || "")
+                      : lang === "en"
+                      ? "No location"
+                      : "Konum yok"}
+                  </small>
                 </div>
-              )}
-              {error && <div className="absolute left-4 top-20 rounded-2xl bg-red-500/90 px-4 py-2 text-sm">{error}</div>}
-            </div>
+              </div>
 
-            <div className="min-h-0 flex-1 overflow-hidden">
-              {activeItem ? (
-                <div className="px-5 py-4">
-                  <p className="text-xs uppercase tracking-[0.26em] text-[#d8b98a]">
-                    {lang === "en" ? "Selected memory" : "Seçili anı"}
-                  </p>
-                  <h3 className="mt-1 line-clamp-1 text-2xl font-semibold">{activeItem.title || (lang === "en" ? "Untitled photo" : "İsimsiz fotoğraf")}</h3>
-                  {activeItem.note ? <p className="mt-2 line-clamp-2 text-sm leading-6 text-white/65">{activeItem.note}</p> : null}
+              {item.imageUrl ? (
+                <div className="memoried-map-photo-box">
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title || "memory"}
+                    className="memoried-map-photo"
+                    style={{ transform: `rotate(${rotation}deg)` }}
+                  />
+
+                  <button
+                    type="button"
+                    className="memoried-rotate-button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      rotatePhoto(item);
+                    }}
+                  >
+                    ↻ {lang === "en" ? "Rotate" : "Döndür"}
+                  </button>
                 </div>
               ) : null}
 
-              <div
-                ref={scrollRef}
-                className="flex h-[calc(100%-110px)] snap-x gap-4 overflow-x-auto px-5 pb-8"
-                onScroll={(event) => {
-                  const container = event.currentTarget;
-                  const cardWidth = 190;
-                  const index = Math.round(container.scrollLeft / cardWidth);
-                  if (index >= 0 && index < visibleItems.length) setActiveIndex(index);
-                }}
-              >
-                {visibleItems.map((item, index) => (
-                  <button
-                    type="button"
-                    key={item.id}
-                    onClick={() => setActiveIndex(index)}
-                    className={`relative h-full min-h-[330px] w-[176px] shrink-0 snap-center overflow-hidden rounded-[2rem] border text-left transition md:w-[230px] ${
-                      index === activeIndex ? "border-[#d8b98a] scale-[1.02]" : "border-white/10 opacity-75"
-                    }`}
-                  >
-                    {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" /> : null}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <p className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[#d8b98a]">{String(index + 1).padStart(2, "0")}</p>
-                      <p className="line-clamp-2 text-sm font-semibold text-white">{item.title || (lang === "en" ? "Photo" : "Fotoğraf")}</p>
-                      <p className="mt-1 line-clamp-1 text-xs text-white/55">{item.locationName || (lang === "en" ? "No location" : "Konum yok")}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+              {item.type === "audio" && item.mediaUrl ? (
+                <div className="memoried-audio-card">
+                  <span>{lang === "en" ? "Voice memory" : "Sesli anı"}</span>
+                  <audio controls src={item.mediaUrl} />
+                </div>
+              ) : null}
+
+              {item.type === "video" && item.mediaUrl ? (
+                <video controls src={item.mediaUrl} className="memoried-map-video" />
+              ) : null}
+
+              {note ? <p className="memoried-map-note">{note}</p> : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
   );
 }
