@@ -377,7 +377,7 @@ export default function MemoryMapMode({ lang, items }: Props) {
             </div>
           </div>
 
-          <div className="memoried-map-canvas-wrap">
+          <div className={`memoried-map-canvas-wrap${activeItem?.itemType === "video" ? " memoried-map-canvas-wrap--shrunk" : ""}`}>
             {locatedItems.length > 0 ? (
               <div ref={mapRef} className="memoried-map-canvas" />
             ) : (

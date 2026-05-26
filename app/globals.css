@@ -636,6 +636,15 @@ body.memoried-map-open { overflow: hidden !important; width: 100% !important; to
   overflow: hidden !important;
   border-bottom: 1px solid rgba(255,255,255,.12);
   background: #e9e1d3 !important;
+  transition: flex-basis 0.4s cubic-bezier(0.4,0,0.2,1),
+              min-height 0.4s cubic-bezier(0.4,0,0.2,1),
+              max-height 0.4s cubic-bezier(0.4,0,0.2,1) !important;
+}
+
+.memoried-map-canvas-wrap--shrunk {
+  flex-basis: 18dvh !important;
+  min-height: 120px !important;
+  max-height: 180px !important;
 }
 
 .memoried-map-canvas,
