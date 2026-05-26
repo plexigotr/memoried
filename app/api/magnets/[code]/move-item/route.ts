@@ -59,7 +59,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (direction === "top" && currentIndex > 0) {
       const firstItem = items[0];
       await prisma.memory_items.update({
-        where: { id: currentItem.id },
+        where: { id: items[currentIndex].id },
         data: { sort_order: firstItem.sort_order - 1 },
       });
       return NextResponse.redirect(new URL(`/m/${code}/edit`, request.url), 303);
