@@ -5,6 +5,7 @@ import MemoryMapMode from "@/components/MemoryMapMode";
 import GalleryReveal from "@/components/GalleryReveal";
 import GalleryLightbox from "@/components/GalleryLightbox";
 import AudioPlayer from "@/components/AudioPlayer";
+import GalleryVideoPreview from "@/components/GalleryVideoPreview";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -532,11 +533,7 @@ export default async function MagnetPage({
                     key={item.id.toString()}
                     className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/80 shadow-[0_28px_72px_rgba(100,70,40,0.17),0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur-xl"
                   >
-                    <video
-                      controls
-                      src={item.signedUrl}
-                      className="w-full block"
-                    />
+                    <GalleryVideoPreview src={item.signedUrl} lang={currentLang} />
 
                     {itemTitle ? (
                       <div className="px-5 py-4">
