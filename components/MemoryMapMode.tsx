@@ -82,40 +82,79 @@ function getDisplayName(item: MapItem, lang: "tr" | "en") {
   return lang === "en" ? "Untitled photo" : "İsimsiz fotoğraf";
 }
 
-function buildMarkerIcon(active = false) {
-  const size = active ? 42 : 32;
-  return {
-    path: "M12 2C8.1 2 5 5.1 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5z",
-    fillColor: active ? "#d8b37a" : "#7b6b59",
-    fillOpacity: 1,
-    strokeColor: "#ffffff",
-    strokeWeight: active ? 2.5 : 1.5,
-    scale: size / 24,
-    anchor: new window.google.maps.Point(12, 22),
-  };
+function markerSvg(index: number, active: boolean) {
+  const fill = active ? "#d8a45f" : "#2d2520";
+  const stroke = active ? "#ffffff" : "#d8a45f";
+  const text = String(index + 1);
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
+    <svg xmlns="http://www.w3.org/2000/svg" width="54" height="68" viewBox="0 0 54 68">
+      <filter id="shadow" x="-40%" y="-30%" width="180%" height="180%">
+        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000000" flood-opacity="0.34"/>
+      </filter>
+      <path filter="url(#shadow)" d="M27 3C14.3 3 4 13.2 4 25.7c0 17.1 23 38.8 23 38.8s23-21.7 23-38.8C50 13.2 39.7 3 27 3Z" fill="${fill}" stroke="${stroke}" stroke-width="3"/>
+      <circle cx="27" cy="25" r="12.5" fill="rgba(255,255,255,0.16)" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+      <text x="27" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="800" fill="#ffffff">${text}</text>
+    </svg>
+  `)}`;
 }
+
+const mapStyles = [
+  { elementType: "geometry", stylers: [{ color: "#e9e1d3" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#6b5a4a" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f6efe4" }] },
+  { featureType: "administrative", elementType: "geometry.stroke", stylers: [{ color: "#c6b49b" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#e5dccb" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#f8f3ea" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#d7c8b4" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#f2e4d1" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#aec4c6" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#607d83" }] },
+];
 
 export default function MemoryMapMode({ lang, items }: Props) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState("");
   const mapRef = useRef<HTMLDivElement | null>(null);
+  const timelineRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<any | null>(null);
   const markersRef = useRef<any[]>([]);
-  const polylineRef = useRef<any | null>(null);
+  const routeLineRef = useRef<any[]>([]);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const timelineItems = useMemo(() => items.filter((item) => item.itemType !== "image" || item.imageUrl), [items]);
   const locatedItems = useMemo(() => timelineItems.filter((item) => itemPoint(item)), [timelineItems]);
   const activeItem = timelineItems[activeIndex] || timelineItems[0];
 
-  function focusItem(index: number, shouldScroll = true) {
+  const locatedTimelineIndexes = useMemo(
+    () => locatedItems.map((located) => timelineItems.findIndex((item) => item.id === located.id)),
+    [locatedItems, timelineItems]
+  );
+
+  function updateMarkerIcons(nextActiveIndex: number) {
+    markersRef.current.forEach((marker, markerIndex) => {
+      const timelineIndex = locatedTimelineIndexes[markerIndex];
+      const active = timelineIndex === nextActiveIndex;
+      marker.setIcon({
+        url: markerSvg(markerIndex, active),
+        scaledSize: new window.google.maps.Size(active ? 48 : 40, active ? 60 : 50),
+        anchor: new window.google.maps.Point(active ? 24 : 20, active ? 58 : 48),
+      });
+      marker.setZIndex(active ? 999 : 10 + markerIndex);
+    });
+  }
+
+  function focusItem(index: number, shouldScroll = true, zoom = 14) {
     const item = timelineItems[index];
     if (!item) return;
+
     setActiveIndex(index);
+    updateMarkerIcons(index);
 
     if (shouldScroll) {
-      setTimeout(() => {
+      window.setTimeout(() => {
         cardRefs.current[item.id]?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 40);
     }
@@ -123,13 +162,38 @@ export default function MemoryMapMode({ lang, items }: Props) {
     const point = itemPoint(item);
     if (point && mapInstanceRef.current) {
       mapInstanceRef.current.panTo(point);
-      mapInstanceRef.current.setZoom(11);
+      window.setTimeout(() => mapInstanceRef.current?.setZoom(zoom), 160);
     }
   }
 
+  function fitRoute() {
+    if (!mapInstanceRef.current || locatedItems.length === 0 || !window.google?.maps) return;
+    const points = locatedItems.map((item) => itemPoint(item)).filter(Boolean) as { lat: number; lng: number }[];
+    if (points.length === 0) return;
+    if (points.length === 1) {
+      mapInstanceRef.current.setCenter(points[0]);
+      mapInstanceRef.current.setZoom(13);
+      return;
+    }
+    const bounds = new window.google.maps.LatLngBounds();
+    points.forEach((point) => bounds.extend(point));
+    mapInstanceRef.current.fitBounds(bounds, 58);
+  }
+
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    const previousWidth = document.body.style.width;
+    document.body.style.overflow = "hidden";
+    document.body.style.width = "100%";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.width = previousWidth;
+    };
+  }, [open]);
+
   useEffect(() => {
     if (!open || locatedItems.length === 0) return;
-
     let cancelled = false;
 
     loadGoogleMaps()
@@ -138,60 +202,59 @@ export default function MemoryMapMode({ lang, items }: Props) {
         setError("");
 
         const points = locatedItems.map((item) => itemPoint(item)).filter(Boolean) as { lat: number; lng: number }[];
-        const firstPoint = itemPoint(activeItem) || points[0];
-
+        const firstPoint = points[0];
         if (!firstPoint) return;
 
         if (!mapInstanceRef.current) {
           mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
             center: firstPoint,
-            zoom: 5,
+            zoom: 8,
             mapTypeId: "roadmap",
             disableDefaultUI: true,
-            zoomControl: false,
+            zoomControl: true,
             streetViewControl: false,
             fullscreenControl: false,
             mapTypeControl: false,
             gestureHandling: "greedy",
-            styles: [
-              { elementType: "geometry", stylers: [{ color: "#ebe6dc" }] },
-              { elementType: "labels.text.fill", stylers: [{ color: "#6b5d4d" }] },
-              { elementType: "labels.text.stroke", stylers: [{ color: "#f7f1e7" }] },
-              { featureType: "water", elementType: "geometry", stylers: [{ color: "#b9cbd0" }] },
-              { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-              { featureType: "poi", stylers: [{ visibility: "off" }] },
-              { featureType: "transit", stylers: [{ visibility: "off" }] },
-            ],
+            styles: mapStyles,
           });
         }
 
         markersRef.current.forEach((marker) => marker.setMap(null));
         markersRef.current = [];
-
-        if (polylineRef.current) {
-          polylineRef.current.setMap(null);
-          polylineRef.current = null;
-        }
+        routeLineRef.current.forEach((line) => line.setMap(null));
+        routeLineRef.current = [];
 
         if (points.length >= 2) {
-          polylineRef.current = new window.google.maps.Polyline({
+          const shadowLine = new window.google.maps.Polyline({
             path: points,
             geodesic: true,
-            strokeColor: "#d8b37a",
-            strokeOpacity: 0.95,
+            strokeColor: "#ffffff",
+            strokeOpacity: 0.76,
+            strokeWeight: 9,
+            zIndex: 1,
+          });
+          const goldLine = new window.google.maps.Polyline({
+            path: points,
+            geodesic: true,
+            strokeColor: "#c8893d",
+            strokeOpacity: 1,
             strokeWeight: 4,
+            zIndex: 2,
             icons: [
               {
-                icon: { path: "M 0,-1 0,1", strokeOpacity: 1, scale: 3 },
-                offset: "0",
-                repeat: "18px",
+                icon: { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 2.2, strokeColor: "#7b4d1f", strokeWeight: 1.4, fillColor: "#d8a45f", fillOpacity: 1 },
+                offset: "12px",
+                repeat: "120px",
               },
             ],
           });
-          polylineRef.current.setMap(mapInstanceRef.current);
+          shadowLine.setMap(mapInstanceRef.current);
+          goldLine.setMap(mapInstanceRef.current);
+          routeLineRef.current = [shadowLine, goldLine];
         }
 
-        locatedItems.forEach((item) => {
+        locatedItems.forEach((item, markerIndex) => {
           const point = itemPoint(item);
           if (!point) return;
           const timelineIndex = timelineItems.findIndex((candidate) => candidate.id === item.id);
@@ -199,43 +262,60 @@ export default function MemoryMapMode({ lang, items }: Props) {
             map: mapInstanceRef.current,
             position: point,
             title: getDisplayName(item, lang),
-            icon: buildMarkerIcon(timelineIndex === activeIndex),
-            zIndex: timelineIndex === activeIndex ? 10 : 1,
+            icon: {
+              url: markerSvg(markerIndex, timelineIndex === activeIndex),
+              scaledSize: new window.google.maps.Size(timelineIndex === activeIndex ? 48 : 40, timelineIndex === activeIndex ? 60 : 50),
+              anchor: new window.google.maps.Point(timelineIndex === activeIndex ? 24 : 20, timelineIndex === activeIndex ? 58 : 48),
+            },
+            zIndex: timelineIndex === activeIndex ? 999 : 10 + markerIndex,
           });
-          marker.addListener("click", () => focusItem(timelineIndex, true));
+          marker.addListener("click", () => focusItem(timelineIndex, true, 15));
           markersRef.current.push(marker);
         });
 
-        const bounds = new window.google.maps.LatLngBounds();
-        points.forEach((point) => bounds.extend(point));
-        if (points.length > 1) {
-          mapInstanceRef.current.fitBounds(bounds, 52);
-        } else {
-          mapInstanceRef.current.setCenter(points[0]);
-          mapInstanceRef.current.setZoom(11);
-        }
+        window.setTimeout(() => fitRoute(), 180);
       })
       .catch(() => setError(lang === "en" ? "Map could not be loaded." : "Harita yüklenemedi."));
 
     return () => {
       cancelled = true;
     };
-  }, [open, locatedItems, timelineItems, activeIndex, activeItem, lang]);
+  }, [open, locatedItems, timelineItems, lang]);
 
   useEffect(() => {
     if (!open || !mapInstanceRef.current || !activeItem) return;
+    updateMarkerIcons(activeIndex);
     const point = itemPoint(activeItem);
     if (point) {
       mapInstanceRef.current.panTo(point);
-      mapInstanceRef.current.setZoom(11);
+      window.setTimeout(() => mapInstanceRef.current?.setZoom(14), 120);
     }
-    markersRef.current.forEach((marker, index) => {
-      const markerItem = locatedItems[index];
-      const timelineIndex = timelineItems.findIndex((candidate) => candidate.id === markerItem?.id);
-      marker.setIcon(buildMarkerIcon(timelineIndex === activeIndex));
-      marker.setZIndex(timelineIndex === activeIndex ? 10 : 1);
+  }, [activeIndex, activeItem, open]);
+
+  function handleTimelineScroll() {
+    const container = timelineRef.current;
+    if (!container) return;
+    const containerRect = container.getBoundingClientRect();
+    const center = containerRect.top + containerRect.height / 2;
+
+    let nearestIndex = activeIndex;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+
+    timelineItems.forEach((item, index) => {
+      const node = cardRefs.current[item.id];
+      if (!node) return;
+      const rect = node.getBoundingClientRect();
+      const distance = Math.abs(rect.top + rect.height / 2 - center);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = index;
+      }
     });
-  }, [activeIndex, activeItem, locatedItems, open, timelineItems]);
+
+    if (nearestIndex !== activeIndex) {
+      setActiveIndex(nearestIndex);
+    }
+  }
 
   if (timelineItems.length === 0) return null;
 
@@ -253,9 +333,14 @@ export default function MemoryMapMode({ lang, items }: Props) {
               <p className="memoried-map-eyebrow">{lang === "en" ? "Memory route" : "Anı rotası"}</p>
               <h2 className="memoried-map-heading">{getDisplayName(activeItem, lang)}</h2>
             </div>
-            <button type="button" onClick={() => setOpen(false)} className="memoried-map-close">
-              {lang === "en" ? "Gallery" : "Galeri"}
-            </button>
+            <div className="memoried-map-actions">
+              <button type="button" onClick={fitRoute} className="memoried-map-route-button">
+                {lang === "en" ? "Show route" : "Rotayı göster"}
+              </button>
+              <button type="button" onClick={() => setOpen(false)} className="memoried-map-close">
+                {lang === "en" ? "Gallery" : "Galeri"}
+              </button>
+            </div>
           </div>
 
           <div className="memoried-map-canvas-wrap">
@@ -269,7 +354,7 @@ export default function MemoryMapMode({ lang, items }: Props) {
             {error ? <div className="memoried-map-error">{error}</div> : null}
           </div>
 
-          <div className="memoried-map-timeline">
+          <div ref={timelineRef} className="memoried-map-timeline" onScroll={handleTimelineScroll}>
             {timelineItems.map((item, index) => {
               const title = getDisplayName(item, lang);
               const note = cleanMemoryNote(item.note || "");
@@ -283,7 +368,7 @@ export default function MemoryMapMode({ lang, items }: Props) {
                     cardRefs.current[item.id] = node;
                   }}
                   className={`memoried-map-story-card ${isActive ? "is-active" : ""}`}
-                  onClick={() => focusItem(index, false)}
+                  onClick={() => focusItem(index, false, 14)}
                 >
                   <div className="memoried-map-card-index">{String(index + 1).padStart(2, "0")}</div>
 
