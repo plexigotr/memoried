@@ -5,6 +5,7 @@ import { getSignedImageUrl } from "@/lib/storage";
 import VideoUploadForm from "@/components/VideoUploadForm";
 import VideoTrimButton from "@/components/VideoTrimButton";
 import AudioRecorderForm from "@/components/AudioRecorderForm";
+import AudioFileUploadForm from "@/components/AudioFileUploadForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
 import PhotoLocationButton from "@/components/PhotoLocationButton";
 import ScrollPreserver from "@/components/ScrollPreserver";
@@ -605,51 +606,7 @@ export default async function EditPage({
 
             <AudioRecorderForm code={code} lang={currentLang} />
 
-            <form
-              action={`/api/magnets/${code}/upload-audio`}
-              method="POST"
-              encType="multipart/form-data"
-              className="space-y-5"
-            >
-              <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">
-                  {ui.audioTitle}
-                </label>
-                <input
-                  type="text"
-                  name="audioTitle"
-                  placeholder={
-                    currentLang === "en"
-                      ? "e.g. Sea Sound"
-                      : "Örn. Deniz Sesi"
-                  }
-                  className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-stone-700">
-                  {ui.audioFile}
-                </label>
-                <label className="block cursor-pointer rounded-2xl border border-dashed border-stone-300 px-4 py-5 text-center text-sm text-stone-600 transition hover:bg-stone-50">
-                  {currentLang === "en" ? "Choose audio file" : "Ses dosyası seç"}
-                  <input
-                    type="file"
-                    name="audioFile"
-                    accept="audio/*"
-                    className="hidden"
-                    required
-                  />
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                className="rounded-full bg-stone-900 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
-              >
-                {ui.uploadAudio}
-              </button>
-            </form>
+            <AudioFileUploadForm code={code} lang={currentLang} />
           </section>
 
           <section className="rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm md:p-6">
@@ -883,6 +840,51 @@ export default async function EditPage({
                         code={code}
                         lang={currentLang}
                       />
+
+                      <form action={`/api/magnets/${code}/update-item-description`} method="POST" className="rounded-2xl border border-stone-200 bg-white p-4">
+                        <input type="hidden" name="itemId" value={item.id.toString()} />
+                        <label className="block text-sm font-medium text-stone-800">
+                          {currentLang === "en" ? "Description" : "Açıklama"}
+                        </label>
+                        <p className="mt-0.5 text-xs text-stone-400">
+                          {currentLang === "en"
+                            ? "A short note shown below the video."
+                            : "Videonun altında görünen kısa not."}
+                        </p>
+                        <textarea
+                          name="description"
+                          rows={2}
+                          defaultValue={item.content_text || ""}
+                          placeholder={currentLang === "en" ? "e.g. Our road trip highlight…" : "Örn. Yol yolculuğumuzun öne çıkanı…"}
+                          className="mt-2 w-full resize-none rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
+                        />
+                        <button type="submit" className="mt-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white">
+                          {currentLang === "en" ? "Save description" : "Açıklamayı kaydet"}
+                        </button>
+                      </form>
+
+                      <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                        <div className="mb-3">
+                          <p className="text-sm font-medium text-stone-800">
+                            {currentLang === "en" ? "Video location" : "Video konumu"}
+                          </p>
+                          <p className="mt-1 text-xs leading-5 text-stone-500">
+                            {(item as any).location_name
+                              ? (item as any).location_name
+                              : currentLang === "en"
+                              ? "No location added yet."
+                              : "Henüz konum eklenmedi."}
+                          </p>
+                        </div>
+                        <PhotoLocationButton
+                          lang={currentLang}
+                          code={code}
+                          itemId={item.id.toString()}
+                          initialLocationName={(item as any).location_name}
+                          initialLatitude={(item as any).latitude}
+                          initialLongitude={(item as any).longitude}
+                        />
+                      </div>
                     </div>
                     ) : item.item_type === "audio" && item.signedUrl ? (
                       <audio

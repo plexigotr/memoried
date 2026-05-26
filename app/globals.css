@@ -453,7 +453,8 @@ body {
   position: relative;
   width: 100%;
   background: #13100e;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
+  max-height: 42dvh;
   overflow: hidden;
   display: block;
 }
@@ -480,7 +481,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  padding: 28px 22px;
+  padding: 54px 22px 28px; /* top padding clears the index badge */
   color: rgba(255,255,255,.88);
   font-size: 18px;
   line-height: 1.6;
@@ -660,8 +661,9 @@ body.memoried-map-open { overflow: hidden !important; width: 100% !important; to
 
 .memoried-map-image-frame {
   position: relative !important;
-  aspect-ratio: 1 / 1 !important;
+  aspect-ratio: 4 / 3 !important;
   width: 100% !important;
+  max-height: 42dvh !important; /* never taller than visible timeline area */
   overflow: hidden !important;
   background: #13100e !important;
   display: block !important;

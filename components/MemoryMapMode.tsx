@@ -159,19 +159,19 @@ export default function MemoryMapMode({ lang, items }: Props) {
     const currentZoom = map.getZoom() ?? 10;
     const currentCenter = map.getCenter();
 
-    // Mevcut ile hedef arasındaki mesafeye göre ara zoom seviyesi hesapla
+    // Şehirlerin üzerinden geçer gibi — çok yakın zoom seviyesinde uçuş
     let flyZoom: number;
     if (currentCenter) {
       const dLat = Math.abs(currentCenter.lat() - targetPoint.lat);
       const dLng = Math.abs(currentCenter.lng() - targetPoint.lng);
       const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-      if (dist > 8)       flyZoom = 4;
-      else if (dist > 3)  flyZoom = 5;
-      else if (dist > 1)  flyZoom = 7;
-      else if (dist > 0.2) flyZoom = 9;
-      else                flyZoom = Math.max(currentZoom - 3, 8);
+      if (dist > 5)        flyZoom = 8;  // Bölge — şehirler görünür
+      else if (dist > 1.5) flyZoom = 9;  // Şehir alanı
+      else if (dist > 0.5) flyZoom = 10; // Şehir
+      else if (dist > 0.1) flyZoom = 11; // Mahalle
+      else                 flyZoom = Math.max(currentZoom - 1, 12);
     } else {
-      flyZoom = Math.max(currentZoom - 4, 5);
+      flyZoom = 8;
     }
     flyZoom = Math.min(flyZoom, targetZoom - 1);
 
