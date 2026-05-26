@@ -1,5 +1,7 @@
 "use client";
 
+
+import { cleanMemoryNote, shortLocationName } from "@/lib/memoryMapFormat";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type MapItem = {
