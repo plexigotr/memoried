@@ -719,7 +719,7 @@ export default async function EditPage({
                           </label>
                           <input
                             name="title"
-                            defaultValue={itemTitle || ""}
+                            defaultValue={(item as any).title || ""}
                             placeholder={currentLang === "en" ? "Example: Alaçatı sunset" : "Örn. Alaçatı gün batımı"}
                             className="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
                           />
