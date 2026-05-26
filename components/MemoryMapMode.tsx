@@ -72,9 +72,7 @@ function typeLabel(type: string, lang: "tr" | "en") {
   return lang === "en" ? "Note" : "Not";
 }
 
-export default function MemoryMapMode({
-  language,
-  lang, items }: Props) {
+export default function MemoryMapMode({ lang, items }: Props) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState("");
