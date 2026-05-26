@@ -4,9 +4,7 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 
 type RouteContext = {
-  params: Promise<{
-    code: string;
-  }>;
+  params: Promise<{ code: string }>;
 };
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -15,21 +13,19 @@ export async function POST(request: NextRequest, context: RouteContext) {
   try {
     const formData = await request.formData();
     const itemIdRaw = String(formData.get("itemId") || "").trim();
-    const lang = String(formData.get("lang") || "tr").trim();
-    const locationName = String(formData.get("locationName") || "").trim();
+    const locationName = String(formData.get("location_name") || "").trim();
     const latitudeRaw = String(formData.get("latitude") || "").trim();
     const longitudeRaw = String(formData.get("longitude") || "").trim();
 
     if (!itemIdRaw) {
-      return NextResponse.redirect(
-        new URL(`/m/${code}/edit?error=location-failed&lang=${lang}`, request.url),
-        303
-      );
+      return NextResponse.json({ ok: false, error: "missing-item" }, { status: 400 });
     }
 
+    const itemId = BigInt(itemIdRaw);
     const latitude = latitudeRaw ? Number(latitudeRaw) : null;
     const longitude = longitudeRaw ? Number(longitudeRaw) : null;
-    const hasValidLocation =
+    const hasLocation =
+      locationName &&
       latitude !== null &&
       longitude !== null &&
       Number.isFinite(latitude) &&
@@ -41,35 +37,26 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
 
     if (!magnet?.memory) {
-      return NextResponse.redirect(
-        new URL(`/m/${code}/edit?error=no-memory&lang=${lang}`, request.url),
-        303
-      );
+      return NextResponse.json({ ok: false, error: "memory-not-found" }, { status: 404 });
     }
 
     await prisma.memory_items.updateMany({
       where: {
-        id: BigInt(itemIdRaw),
+        id: itemId,
         memory_id: magnet.memory.id,
         item_type: "image",
       },
       data: {
-        location_name: locationName || null,
-        latitude: hasValidLocation ? latitude : null,
-        longitude: hasValidLocation ? longitude : null,
+        location_name: hasLocation ? locationName : null,
+        latitude: hasLocation ? latitude : null,
+        longitude: hasLocation ? longitude : null,
+        updated_at: new Date(),
       },
     });
 
-    return NextResponse.redirect(
-      new URL(`/m/${code}/edit?updated=location&lang=${lang}`, request.url),
-      303
-    );
+    return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Update item location error:", error);
-
-    return NextResponse.redirect(
-      new URL(`/m/${code}/edit?error=location-failed`, request.url),
-      303
-    );
+    return NextResponse.json({ ok: false, error: "location-update-failed" }, { status: 500 });
   }
 }

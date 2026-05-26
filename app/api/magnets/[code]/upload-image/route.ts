@@ -18,12 +18,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const formData = await request.formData();
 
     const title = String(formData.get("imageTitle") || "").trim();
-    const locationName = String(formData.get("locationName") || "").trim();
+    const locationName = String(formData.get("location_name") || "").trim();
     const latitudeRaw = String(formData.get("latitude") || "").trim();
     const longitudeRaw = String(formData.get("longitude") || "").trim();
     const latitude = latitudeRaw ? Number(latitudeRaw) : null;
     const longitude = longitudeRaw ? Number(longitudeRaw) : null;
-    const hasValidLocation =
+    const hasLocation =
+      locationName &&
       latitude !== null &&
       longitude !== null &&
       Number.isFinite(latitude) &&
@@ -162,9 +163,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
         item_type: "image",
         title: title || null,
         file_path: filePath,
-        location_name: locationName || null,
-        latitude: hasValidLocation ? latitude : null,
-        longitude: hasValidLocation ? longitude : null,
+        location_name: hasLocation ? locationName : null,
+        latitude: hasLocation ? latitude : null,
+        longitude: hasLocation ? longitude : null,
         sort_order: lastSortOrder + 1,
         is_visible: true,
       },

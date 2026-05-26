@@ -5,7 +5,7 @@ import { getSignedImageUrl } from "@/lib/storage";
 import VideoUploadForm from "@/components/VideoUploadForm";
 import AudioRecorderForm from "@/components/AudioRecorderForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
-import LocationPicker from "@/components/LocationPicker";
+import PhotoLocationButton from "@/components/PhotoLocationButton";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -731,42 +731,28 @@ export default async function EditPage({
                         </button>
                       </form>
 
-                      <form
-                        action={`/api/magnets/${code}/update-item-location`}
-                        method="POST"
-                        className="rounded-2xl border border-stone-200 bg-white p-4"
-                      >
-                        <input type="hidden" name="itemId" value={item.id.toString()} />
-                        <input type="hidden" name="lang" value={currentLang} />
-
+                      <div className="rounded-2xl border border-stone-200 bg-white p-4">
                         <div className="mb-3">
                           <p className="text-sm font-medium text-stone-800">
                             {currentLang === "en" ? "Photo location" : "Fotoğraf konumu"}
                           </p>
-                          <p className="text-xs leading-5 text-stone-500">
-                            {currentLang === "en"
-                              ? "You can add or change the location later. This is optional."
-                              : "Konumu sonradan ekleyebilir veya değiştirebilirsin. Zorunlu değildir."}
+                          <p className="mt-1 text-xs leading-5 text-stone-500">
+                            {item.location_name
+                              ? item.location_name
+                              : currentLang === "en"
+                              ? "No location added yet. You can add it later."
+                              : "Henüz konum eklenmedi. Sonradan ekleyebilirsin."}
                           </p>
                         </div>
-
-                        <LocationPicker
+                        <PhotoLocationButton
                           lang={currentLang}
-                          defaultLocationName={item.location_name}
-                          defaultLatitude={item.latitude}
-                          defaultLongitude={item.longitude}
-                          locationNameField="locationName"
-                          latitudeField="latitude"
-                          longitudeField="longitude"
+                          code={code}
+                          itemId={item.id.toString()}
+                          initialLocationName={item.location_name}
+                          initialLatitude={item.latitude}
+                          initialLongitude={item.longitude}
                         />
-
-                        <button
-                          type="submit"
-                          className="mt-4 rounded-full bg-stone-900 px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
-                        >
-                          {currentLang === "en" ? "Save location" : "Konumu Kaydet"}
-                        </button>
-                      </form>
+                      </div>
 
                       {memory.cover_image_path === item.file_path && (
                         <form

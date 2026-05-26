@@ -1,7 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
-import LocationPicker from "@/components/LocationPicker";
+import { useState } from "react";
+import PhotoLocationButton from "@/components/PhotoLocationButton";
+
+type LocationValue = {
+  location_name: string;
+  latitude: string;
+  longitude: string;
+};
 
 export default function ImageUploadForm({
   code,
@@ -13,10 +19,9 @@ export default function ImageUploadForm({
   remainingPhotos: number;
 }) {
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const formRef = useRef<HTMLFormElement | null>(null);
+  const [location, setLocation] = useState<LocationValue | null>(null);
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files || []);
 
     if (remainingPhotos <= 0) {
@@ -36,26 +41,19 @@ export default function ImageUploadForm({
       );
     }
 
-    setSelectedFiles(files.slice(0, remainingPhotos));
-  }
-
-  async function handleUpload() {
-    if (selectedFiles.length === 0) return;
+    if (files.length === 0) return;
 
     try {
       setIsUploading(true);
 
-      const baseFormData = new FormData(formRef.current || undefined);
-      const locationName = String(baseFormData.get("locationName") || "");
-      const latitude = String(baseFormData.get("latitude") || "");
-      const longitude = String(baseFormData.get("longitude") || "");
-
-      for (const file of selectedFiles) {
+      for (const file of files.slice(0, remainingPhotos)) {
         const formData = new FormData();
         formData.append("imageFile", file);
-        formData.append("locationName", locationName);
-        formData.append("latitude", latitude);
-        formData.append("longitude", longitude);
+        if (location?.location_name && location.latitude && location.longitude) {
+          formData.append("location_name", location.location_name);
+          formData.append("latitude", location.latitude);
+          formData.append("longitude", location.longitude);
+        }
 
         const response = await fetch(`/api/magnets/${code}/upload-image`, {
           method: "POST",
@@ -72,7 +70,7 @@ export default function ImageUploadForm({
         }
       }
 
-      window.location.href = `/m/${code}/edit?uploaded=success&lang=${lang}`;
+      window.location.href = `/m/${code}/edit?uploaded=success`;
     } catch (error) {
       console.error("Image upload error:", error);
       alert(
@@ -86,7 +84,32 @@ export default function ImageUploadForm({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
+      <div className="rounded-3xl border border-stone-200 bg-stone-50 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-stone-900">
+              {lang === "en" ? "Photo location" : "Fotoğraf konumu"}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-stone-500">
+              {location
+                ? location.location_name
+                : lang === "en"
+                ? "Optional. Closed by default; open only if you want to add a place."
+                : "Opsiyonel. Normalde kapalıdır; sadece konum eklemek istersen açılır."}
+            </p>
+          </div>
+
+          <PhotoLocationButton
+            lang={lang}
+            onLocationSelected={setLocation}
+            initialLocationName={location?.location_name || null}
+            initialLatitude={location?.latitude || null}
+            initialLongitude={location?.longitude || null}
+          />
+        </div>
+      </div>
+
       <label
         className={`block cursor-pointer rounded-2xl border border-dashed border-stone-300 px-4 py-6 text-center text-sm text-stone-600 transition hover:bg-stone-50 ${
           isUploading ? "animate-pulse opacity-70" : ""
@@ -100,10 +123,6 @@ export default function ImageUploadForm({
           ? lang === "en"
             ? "Photo limit reached"
             : "Fotoğraf limiti doldu"
-          : selectedFiles.length > 0
-          ? lang === "en"
-            ? `${selectedFiles.length} photo(s) selected`
-            : `${selectedFiles.length} fotoğraf seçildi`
           : lang === "en"
           ? `Choose photos (${remainingPhotos} left)`
           : `Fotoğrafları seç (${remainingPhotos} hak kaldı)`}
@@ -121,42 +140,10 @@ export default function ImageUploadForm({
           accept="image/*"
           multiple
           className="hidden"
-          disabled={isUploading || remainingPhotos <= 0}
+          disabled={isUploading}
           onChange={handleFileChange}
         />
       </label>
-
-      {selectedFiles.length > 0 && (
-        <form ref={formRef} className="space-y-4" onSubmit={(event) => event.preventDefault()}>
-          <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
-            {lang === "en"
-              ? "After choosing photos, you can optionally attach a location. Search a place, select it on the map, use your current location, or leave it empty."
-              : "Fotoğraf seçildikten sonra istersen konum ekleyebilirsin. Yer arayabilir, haritadan seçebilir, mevcut konumu kaydedebilir veya boş bırakabilirsin."}
-          </div>
-
-          <LocationPicker lang={lang} />
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={handleUpload}
-              disabled={isUploading}
-              className="rounded-full bg-stone-900 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90 disabled:opacity-60"
-            >
-              {lang === "en" ? "Upload photos" : "Fotoğrafları yükle"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedFiles([])}
-              disabled={isUploading}
-              className="rounded-full border border-stone-300 px-6 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-100 disabled:opacity-60"
-            >
-              {lang === "en" ? "Cancel" : "Vazgeç"}
-            </button>
-          </div>
-        </form>
-      )}
     </div>
   );
 }
