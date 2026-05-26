@@ -124,6 +124,7 @@ model memory_items {
   memory memories @relation(fields: [memory_id], references: [id], onDelete: Cascade)
 
   @@index([memory_id, sort_order])
+  rotation       Int      @default(0)
 }
 
 model otp_codes {

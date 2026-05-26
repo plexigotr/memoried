@@ -189,7 +189,6 @@ export default function PhotoLocationButton({
       autocompleteServiceRef.current?.getPlacePredictions(
         {
           input: query,
-          componentRestrictions: { country: "tr" },
         },
         (results: any[] | null) => setPredictions(results || [])
       );
