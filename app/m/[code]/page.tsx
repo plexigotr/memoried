@@ -6,6 +6,7 @@ import GalleryReveal from "@/components/GalleryReveal";
 import GalleryLightbox from "@/components/GalleryLightbox";
 import AudioPlayer from "@/components/AudioPlayer";
 import GalleryVideoPreview from "@/components/GalleryVideoPreview";
+import { shortLocationName } from "@/lib/memoryMapFormat";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -520,14 +521,17 @@ export default async function MagnetPage({
                         {itemTitle ? (
                           <p className="gallery-polaroid-title">{itemTitle}</p>
                         ) : null}
-                        {item.location_name ? (
-                          <p className="gallery-polaroid-location">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true">
-                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                            </svg>
-                            {item.location_name}
-                          </p>
-                        ) : null}
+                        {item.location_name ? (() => {
+                          const city = shortLocationName(item.location_name).split(",").pop()?.trim() || "";
+                          return city ? (
+                            <p className="gallery-polaroid-location">
+                              <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              </svg>
+                              {city}
+                            </p>
+                          ) : null;
+                        })() : null}
                         {itemCaption ? (
                           <p className="gallery-polaroid-caption">{itemCaption}</p>
                         ) : null}
