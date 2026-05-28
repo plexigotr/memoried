@@ -371,8 +371,10 @@ export default function MemoryMapMode({ lang, items }: Props) {
               <button type="button" onClick={fitRoute} className="memoried-map-route-button">
                 {lang === "en" ? "Show route" : "Rotayı göster"}
               </button>
-              <button type="button" onClick={() => setOpen(false)} className="memoried-map-close">
-                {lang === "en" ? "Gallery" : "Galeri"}
+              <button type="button" onClick={() => setOpen(false)} className="memoried-map-close" aria-label={lang === "en" ? "Back to gallery" : "Galeriye dön"}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="18" height="18" aria-hidden="true">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
               </button>
             </div>
           </div>

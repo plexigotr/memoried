@@ -514,14 +514,24 @@ export default async function MagnetPage({
                         className={`memory-gallery-image${isRotated90 ? " memory-gallery-image--rotated" : ""}`}
                         style={imgTransform ? { transform: imgTransform } : undefined}
                       />
-                      {itemTitle ? (
-                        <div className="memory-gallery-title-overlay">
-                          {itemTitle}
-                        </div>
-                      ) : null}
                     </div>
-                    {itemCaption ? (
-                      <p className="memory-gallery-caption">{itemCaption}</p>
+                    {(itemTitle || item.location_name || itemCaption) ? (
+                      <div className="gallery-polaroid-strip">
+                        {itemTitle ? (
+                          <p className="gallery-polaroid-title">{itemTitle}</p>
+                        ) : null}
+                        {item.location_name ? (
+                          <p className="gallery-polaroid-location">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true">
+                              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                            {item.location_name}
+                          </p>
+                        ) : null}
+                        {itemCaption ? (
+                          <p className="gallery-polaroid-caption">{itemCaption}</p>
+                        ) : null}
+                      </div>
                     ) : null}
                   </article>
                 );
