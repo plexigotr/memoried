@@ -4,17 +4,23 @@ import { createSessionToken, sessionCookieOptions } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { allowRequest, requestIp } from "@/lib/rateLimit";
 import { safeReturnPath } from "@/lib/safeRedirect";
+import { normalizePhoneNumber } from "@/lib/phone";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const phoneNumber = String(formData.get("phoneNumber") || "").trim();
+    const rawPhoneNumber = String(formData.get("phoneNumber") || "");
+    const phoneNumber = normalizePhoneNumber(rawPhoneNumber);
     const code = String(formData.get("code") || "").trim();
     const returnPath = safeReturnPath(String(formData.get("returnTo") || ""));
 
-    if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber) || !/^\d{4,10}$/.test(code)) {
+    if (
+      !phoneNumber ||
+      !/^\+[1-9]\d{7,14}$/.test(phoneNumber) ||
+      !/^\d{4,10}$/.test(code)
+    ) {
       return NextResponse.redirect(
-        new URL(`/account/verify?phone=${encodeURIComponent(phoneNumber)}&error=missing-data`, request.url),
+        new URL(`/account/verify?phone=${encodeURIComponent(phoneNumber || rawPhoneNumber)}&error=missing-data`, request.url),
         303
       );
     }

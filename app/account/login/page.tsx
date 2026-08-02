@@ -1,4 +1,5 @@
 import { safeReturnPath } from "@/lib/safeRedirect";
+import PhoneNumberField from "@/components/PhoneNumberField";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -36,19 +37,28 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
           </div>
         )}
 
+        {error === "no-phone" && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            Lütfen geçerli bir telefon numarası gir.
+          </div>
+        )}
+
+        {error === "rate-limited" && (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            Çok fazla kod istendi. Lütfen bir süre sonra tekrar dene.
+          </div>
+        )}
+
         <form action="/api/account/send-code" method="POST" className="space-y-5">
           <input type="hidden" name="returnTo" value={returnPath} />
           <div>
             <label className="mb-2 block text-sm font-medium text-stone-700">
               Telefon Numarası
             </label>
-            <input
-              type="text"
-              name="phoneNumber"
-              placeholder="+905551112233"
-              className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
-              required
-            />
+            <PhoneNumberField />
+            <p className="mt-2 text-xs leading-5 text-stone-500">
+              Başındaki 0 ve yazdığın boşluklar otomatik olarak temizlenir.
+            </p>
           </div>
 
           <button

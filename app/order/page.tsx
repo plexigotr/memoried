@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FormEvent } from "react";
+import PhoneNumberField from "@/components/PhoneNumberField";
 
 export default function OrderPage() {
   const [loading, setLoading] = useState(false);
@@ -92,11 +93,9 @@ export default function OrderPage() {
               <label className="text-xs uppercase tracking-[0.25em] text-stone-400">
                 Telefon numarası
               </label>
-              <input
-                name="phoneNumber"
-                required
-                placeholder="05XX XXX XX XX"
-                className="mt-2 w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm outline-none focus:border-stone-400"
+              <PhoneNumberField
+                id="orderPhoneNumber"
+                className="mt-2 border-stone-200 focus-within:border-stone-400"
               />
             </div>
             <div>

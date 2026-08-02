@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { allowRequest, requestIp } from "@/lib/rateLimit";
+import { normalizePhoneNumber } from "@/lib/phone";
 
 function createOrderCode() {
   return `MEM-${randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase()}`;
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
     const requestedPackage = value(formData, "packageType", 30);
     const packageType = requestedPackage === "premium" ? "premium" : "starter";
     const customerName = value(formData, "customerName", 255);
-    const phoneNumber = value(formData, "phoneNumber", 30);
+    const phoneNumber = normalizePhoneNumber(value(formData, "phoneNumber", 30));
     const email = value(formData, "email", 255);
     const address = value(formData, "address", 2000);
     const city = value(formData, "city", 100);
@@ -41,8 +42,7 @@ export async function POST(request: NextRequest) {
       !customerName ||
       !phoneNumber ||
       !address ||
-      !city ||
-      !/^[+\d][\d\s()-]{8,24}$/.test(phoneNumber)
+      !city
     ) {
       return NextResponse.json(
         { error: "invalid-fields", message: "L\u00fctfen zorunlu alanlar\u0131 ge\u00e7erli bi\u00e7imde doldurun." },

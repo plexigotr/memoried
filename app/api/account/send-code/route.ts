@@ -2,14 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { allowRequest, requestIp } from "@/lib/rateLimit";
 import { safeReturnPath } from "@/lib/safeRedirect";
 import { twilioClient, verifyServiceSid } from "@/lib/twilio";
+import { normalizePhoneNumber } from "@/lib/phone";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const phoneNumber = String(formData.get("phoneNumber") || "").trim();
+    const phoneNumber = normalizePhoneNumber(
+      String(formData.get("phoneNumber") || "")
+    );
     const returnPath = safeReturnPath(String(formData.get("returnTo") || ""));
 
-    if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
+    if (!phoneNumber || !/^\+[1-9]\d{7,14}$/.test(phoneNumber)) {
       return NextResponse.redirect(
         new URL("/account/login?error=no-phone", request.url),
         303
