@@ -2,7 +2,52 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getAccountPhone } from "@/lib/auth";
 
-export default async function AccountPage() {
+type AccountPageProps = {
+  searchParams: Promise<{ error?: string }>;
+};
+
+function MagnetConnectCard({ hasMemories = false }: { hasMemories?: boolean }) {
+  return (
+    <div className="mt-8 rounded-3xl border border-dashed border-stone-300 bg-white p-6 shadow-sm md:p-8">
+      <p className="text-xs uppercase tracking-[0.25em] text-stone-500">
+        {hasMemories ? "Yeni magnet" : "Başlangıç"}
+      </p>
+      <h2 className="mt-2 text-2xl font-semibold text-stone-900">
+        {hasMemories ? "Yeni bir anı ekle" : "İlk anını oluştur"}
+      </h2>
+      <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-600">
+        Magnetin üzerinde veya magnetle birlikte gelen kartta bulunan kodu gir.
+        Seni anı oluşturma sayfasına götüreceğiz.
+      </p>
+
+      <form
+        action="/api/account/connect-magnet"
+        method="POST"
+        className="mt-6 flex max-w-xl flex-col gap-3 sm:flex-row"
+      >
+        <input
+          type="text"
+          name="magnetCode"
+          autoComplete="off"
+          placeholder="Örn. MEM-000001"
+          maxLength={100}
+          required
+          className="min-w-0 flex-1 rounded-2xl border border-stone-300 px-4 py-3 uppercase outline-none transition focus:border-stone-500"
+        />
+        <button className="rounded-2xl bg-stone-900 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90">
+          Anı Oluştur
+        </button>
+      </form>
+
+      <p className="mt-4 text-xs leading-5 text-stone-500">
+        Henüz magnetin yoksa <Link href="/shop" className="underline underline-offset-4">mağazadan sipariş verebilirsin</Link>.
+      </p>
+    </div>
+  );
+}
+
+export default async function AccountPage({ searchParams }: AccountPageProps) {
+  const { error } = await searchParams;
   const finalPhone = await getAccountPhone();
 
   if (!finalPhone) {
@@ -100,8 +145,30 @@ export default async function AccountPage() {
           </div>
         </div>
 
+        {error === "invalid-magnet-code" && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            Lütfen magnet kodunu kartta yazdığı biçimde kontrol edip tekrar gir.
+          </div>
+        )}
+        {error === "magnet-not-found" && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            Bu kodla eşleşen bir magnet bulunamadı. Koddaki harf ve rakamları kontrol et.
+          </div>
+        )}
+        {error === "magnet-already-used" && (
+          <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            Bu magnet başka bir hesaba bağlanmış görünüyor. Yardım için bizimle iletişime geç.
+          </div>
+        )}
+        {error === "account-not-found" && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            Hesap bilgisi bulunamadı. Lütfen çıkış yapıp tekrar giriş yap.
+          </div>
+        )}
+
         {user.memories.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2">
+          <>
+            <div className="grid gap-6 md:grid-cols-2">
             {user.memories.map((memory) => (
               <article
                 key={memory.id.toString()}
@@ -146,13 +213,11 @@ export default async function AccountPage() {
                 </div>
               </article>
             ))}
-          </div>
+            </div>
+            <MagnetConnectCard hasMemories />
+          </>
         ) : (
-          <div className="rounded-3xl border border-dashed border-stone-300 bg-white p-10 text-center">
-            <p className="text-stone-600">
-              Bu hesapta henüz kayıtlı anı bulunmuyor.
-            </p>
-          </div>
+          <MagnetConnectCard />
         )}
       </section>
     </main>
