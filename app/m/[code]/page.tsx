@@ -6,7 +6,7 @@ import GalleryLightbox from "@/components/GalleryLightbox";
 import AudioPlayer from "@/components/AudioPlayer";
 import GalleryVideoPreview from "@/components/GalleryVideoPreview";
 import { shortLocationName } from "@/lib/memoryMapFormat";
-import LeafletMemoryMapMode from "@/components/LeafletMemoryMapMode";
+import LeafletMemoryMapMode from "@/components/LeafletMemoryMapLoader";
 
 type MagnetPageProps = {
   params: Promise<{
