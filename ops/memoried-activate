@@ -121,6 +121,7 @@ build_dir="$(mktemp -d "${BUILDS_DIR}/.build-${revision}.XXXXXX")"
 chown memoried:memoried "${build_dir}"
 
 tar --extract --gzip --file="${processing_archive}" --directory="${build_dir}" --no-same-owner --no-same-permissions
+chown -R memoried:memoried "${build_dir}"
 
 [[ -f "${build_dir}/package.json" ]] || fail "package.json is missing"
 [[ -f "${build_dir}/package-lock.json" ]] || fail "package-lock.json is missing"
