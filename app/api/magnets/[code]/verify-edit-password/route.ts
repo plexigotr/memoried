@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { createSessionToken, sessionCookieOptions } from "@/lib/session";
 
 type RouteContext = {
   params: Promise<{ code: string }>;
@@ -26,14 +27,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    if (!magnet.memory.edit_password_hash) {
-      return NextResponse.redirect(
-        new URL(`/m/${code}/edit?lang=${lang}`, request.url),
-        303
-      );
-    }
-
-    const isValid = await bcrypt.compare(
+    const isValid = !magnet.memory.edit_password_hash || await bcrypt.compare(
       password,
       magnet.memory.edit_password_hash
     );
@@ -50,11 +44,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       303
     );
 
-    response.cookies.set(`edit_access_${code}`, "granted", {
-      httpOnly: true,
-      path: `/m/${code}`,
-      maxAge: 60 * 60 * 24 * 30,
-    });
+    const maxAge = 60 * 60 * 24 * 30;
+    response.cookies.set(
+      `edit_access_${code}`,
+      createSessionToken("edit", code, maxAge),
+      sessionCookieOptions(maxAge)
+    );
 
     return response;
   } catch (error) {

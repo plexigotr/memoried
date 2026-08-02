@@ -1,0 +1,5 @@
+ops/memoried-activate text eol=lf
+ops/memoried-receive text eol=lf
+ops/memoried-deploy.sudoers text eol=lf
+ops/memoried-known-hosts text eol=lf
+.github/workflows/*.yml text eol=lf

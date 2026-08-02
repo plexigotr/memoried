@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { deleteMediaObject } from "@/lib/storage";
 
 type RouteContext = {
   params: Promise<{
@@ -49,6 +50,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     await prisma.memory_items.delete({
       where: { id: itemId },
     });
+
+    if (item.file_path) {
+      try {
+        await deleteMediaObject(item.file_path);
+      } catch (storageError) {
+        console.error("Delete item storage cleanup error:", storageError);
+      }
+    }
 
     return NextResponse.redirect(new URL(`/m/${code}/edit`, request.url), 303);
   } catch (error) {

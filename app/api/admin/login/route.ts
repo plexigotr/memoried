@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createSessionToken, sessionCookieOptions } from "@/lib/session";
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const password = String(formData.get("password") || "");
@@ -12,12 +13,13 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.redirect(new URL("/admin", request.url), 303);
+  const maxAge = 60 * 60 * 24;
 
-  response.cookies.set("admin_access", "granted", {
-    httpOnly: true,
-    path: "/",
-    maxAge: 60 * 60 * 24,
-  });
+  response.cookies.set(
+    "admin_access",
+    createSessionToken("admin", "admin", maxAge),
+    sessionCookieOptions(maxAge)
+  );
 
   return response;
 }

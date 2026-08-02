@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { bucket } from "@/lib/storage";
+import { deleteMediaPrefix } from "@/lib/storage";
+import { hasAdminSession } from "@/lib/auth";
 
 async function deleteMemoryFiles(memoryId: bigint) {
   const prefix = `memories/${memoryId.toString()}/`;
 
-  const [files] = await bucket.getFiles({
-    prefix,
-  });
-
-  if (files.length === 0) {
-    return;
-  }
-
-  await Promise.all(files.map((file) => file.delete()));
+  await deleteMediaPrefix(prefix);
 }
 
 export async function POST(request: NextRequest) {
   try {
+    if (!(await hasAdminSession())) {
+      return NextResponse.redirect(
+        new URL("/admin/login", request.url),
+        303
+      );
+    }
+
     const formData = await request.formData();
     const magnetCode = String(formData.get("magnetCode") || "").trim();
 
@@ -42,10 +42,6 @@ export async function POST(request: NextRequest) {
         new URL("/admin?error=magnet-not-found", request.url),
         303
       );
-    }
-
-    if (magnet.memory) {
-      await deleteMemoryFiles(magnet.memory.id);
     }
 
     await prisma.$transaction(async (tx) => {
@@ -74,6 +70,14 @@ export async function POST(request: NextRequest) {
         },
       });
     });
+    if (magnet.memory) {
+      try {
+        await deleteMemoryFiles(magnet.memory.id);
+      } catch (storageError) {
+        console.error("Reset magnet storage cleanup error:", storageError);
+      }
+    }
+
 
     return NextResponse.redirect(
       new URL("/admin?success=magnet-reset", request.url),

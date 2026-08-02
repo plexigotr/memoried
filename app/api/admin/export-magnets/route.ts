@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { hasAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 function csvEscape(value: unknown) {
@@ -6,7 +7,13 @@ function csvEscape(value: unknown) {
   return `"${text.replace(/"/g, '""')}"`;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!(await hasAdminSession())) {
+    return NextResponse.redirect(
+      new URL("/admin/login", request.url),
+      303
+    );
+  }
   const magnets = await prisma.magnets.findMany({
     include: {
       user: true,

@@ -7,10 +7,10 @@ import VideoTrimButton from "@/components/VideoTrimButton";
 import AudioRecorderForm from "@/components/AudioRecorderForm";
 import AudioFileUploadForm from "@/components/AudioFileUploadForm";
 import ImageUploadForm from "@/components/ImageUploadForm";
-import PhotoLocationButton from "@/components/PhotoLocationButton";
 import ScrollPreserver from "@/components/ScrollPreserver";
 import DragSort from "@/components/DragSort";
-import { cookies } from "next/headers";
+import { hasEditSession } from "@/lib/auth";
+import PhotoLocationButton from "@/components/PhotoLocationButton";
 import { redirect } from "next/navigation";
 
 type EditPageProps = {
@@ -60,11 +60,9 @@ export default async function EditPage({
   }
 
   const memory = magnet.memory;
-  const cookieStore = await cookies();
-  const hasEditAccess =
-    cookieStore.get(`edit_access_${code}`)?.value === "granted";
+  const hasEditAccess = await hasEditSession(code);
 
-  if (memory.edit_password_hash && !hasEditAccess) {
+  if (!hasEditAccess) {
     const editLang =
       lang === "en" || lang === "tr"
         ? lang
@@ -212,18 +210,7 @@ export default async function EditPage({
           item.item_type === "audio") &&
         item.file_path
       ) {
-        let actualPath = item.file_path;
-
-        if (actualPath.startsWith("http")) {
-          const marker = `${process.env.GOOGLE_CLOUD_STORAGE_BUCKET}/`;
-          const index = actualPath.indexOf(marker);
-
-          if (index !== -1) {
-            actualPath = actualPath.substring(index + marker.length);
-          }
-        }
-
-        const signedUrl = await getSignedImageUrl(actualPath);
+        const signedUrl = await getSignedImageUrl(item.file_path);
 
         return {
           ...item,
@@ -688,7 +675,7 @@ export default async function EditPage({
                           </label>
                           <input
                             name="title"
-                            defaultValue={(item as any).title || ""}
+                            defaultValue={item.title || ""}
                             placeholder={currentLang === "en" ? "Example: Alaçatı sunset" : "Örn. Alaçatı gün batımı"}
                             className="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
                           />
@@ -869,8 +856,8 @@ export default async function EditPage({
                             {currentLang === "en" ? "Video location" : "Video konumu"}
                           </p>
                           <p className="mt-1 text-xs leading-5 text-stone-500">
-                            {(item as any).location_name
-                              ? (item as any).location_name
+                            {item.location_name
+                              ? item.location_name
                               : currentLang === "en"
                               ? "No location added yet."
                               : "Henüz konum eklenmedi."}
@@ -880,9 +867,9 @@ export default async function EditPage({
                           lang={currentLang}
                           code={code}
                           itemId={item.id.toString()}
-                          initialLocationName={(item as any).location_name}
-                          initialLatitude={(item as any).latitude}
-                          initialLongitude={(item as any).longitude}
+                          initialLocationName={item.location_name}
+                          initialLatitude={item.latitude}
+                          initialLongitude={item.longitude}
                         />
                       </div>
                     </div>

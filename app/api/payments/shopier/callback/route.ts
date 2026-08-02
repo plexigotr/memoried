@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
     const contentType = req.headers.get("content-type") || "";
 
-    let data: any = {};
+    let data: Record<string, unknown> = {};
 
     if (contentType.includes("application/json")) {
-      data = await req.json();
+      data = (await req.json()) as Record<string, unknown>;
     } else {
       const formData = await req.formData();
       formData.forEach((value, key) => {
@@ -16,21 +15,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    console.log("SHOPIER WEBHOOK DATA:", data);
-
-    const shopierOrderId =
-      data.orderid ||
-      data.order_id ||
-      data.id ||
-      data.order?.id ||
-      data.data?.id;
-
+    const shopierOrderId = data.orderid || data.order_id || data.id;
     const status =
-      data.status ||
-      data.payment_status ||
-      data.order_status ||
-      data.order?.status ||
-      data.data?.status;
+      data.status || data.payment_status || data.order_status;
 
     if (!shopierOrderId) {
       return new NextResponse("missing shopier order id", { status: 400 });

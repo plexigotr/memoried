@@ -1,12 +1,16 @@
+import { safeReturnPath } from "@/lib/safeRedirect";
+
 type VerifyPageProps = {
   searchParams: Promise<{
     phone?: string;
     error?: string;
+    returnTo?: string;
   }>;
 };
 
 export default async function AccountVerifyPage({ searchParams }: VerifyPageProps) {
-  const { phone, error } = await searchParams;
+  const { phone, error, returnTo } = await searchParams;
+  const returnPath = safeReturnPath(returnTo);
 
   return (
     <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
@@ -29,6 +33,7 @@ export default async function AccountVerifyPage({ searchParams }: VerifyPageProp
 
         <form action="/api/account/check-code" method="POST" className="space-y-5">
           <input type="hidden" name="phoneNumber" value={phone || ""} />
+          <input type="hidden" name="returnTo" value={returnPath} />
 
           <div>
             <label className="mb-2 block text-sm font-medium text-stone-700">

@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly APP_ROOT="/var/www/memoried"
+readonly INCOMING_DIR="/var/lib/memoried-deploy/incoming"
+readonly PROCESSING_DIR="/var/lib/memoried-deploy/processing"
+readonly BUILDS_DIR="${APP_ROOT}/builds"
+readonly RELEASES_DIR="${APP_ROOT}/releases"
+readonly CURRENT_LINK="${APP_ROOT}/current"
+readonly ENV_FILE="/etc/memoried/memoried.env"
+readonly SERVICE_NAME="memoried.service"
+readonly HEALTH_URL="http://127.0.0.1:3001/"
+readonly BACKUP_DIR="/var/backups/memoried-postgres"
+
+build_dir=""
+release_staging=""
+next_link=""
+previous_release=""
+activated=0
+
+fail() {
+  printf 'Deployment failed: %s\n' "$1" >&2
+  exit 1
+}
+
+safe_remove_tree() {
+  local target="${1:-}"
+
+  case "${target}" in
+    "${BUILDS_DIR}"/.build-*|"${RELEASES_DIR}"/.[0-9a-f]*.ready)
+      [[ -e "${target}" ]] && rm -rf -- "${target}"
+      ;;
+    "")
+      ;;
+    *)
+      printf 'Refusing to remove unexpected path: %s\n' "${target}" >&2
+      ;;
+  esac
+}
+
+wait_for_health() {
+  local attempt
+
+  for attempt in $(seq 1 30); do
+    if curl --fail --silent --show-error --max-time 5 "${HEALTH_URL}" >/dev/null; then
+      return 0
+    fi
+    sleep 2
+  done
+
+  return 1
+}
+
+on_exit() {
+  local status=$?
+
+  rm -f -- "${next_link:-}"
+  safe_remove_tree "${release_staging:-}"
+  safe_remove_tree "${build_dir:-}"
+
+  if (( status != 0 && activated == 1 )); then
+    printf 'Health check failed; restoring the previous Memoried release.\n' >&2
+    if [[ -n "${previous_release}" && "${previous_release}" == "${RELEASES_DIR}/"* ]]; then
+      ln -sfn -- "${previous_release}" "${CURRENT_LINK}"
+      systemctl restart "${SERVICE_NAME}" || true
+      wait_for_health || true
+    fi
+  fi
+
+  exit "${status}"
+}
+
+trap on_exit EXIT
+
+[[ "$(id -u)" -eq 0 ]] || fail "the activation helper must run as root"
+
+exec 9>"${INCOMING_DIR}/activate.lock"
+flock -n 9 || fail "another activation is already running"
+
+[[ -f "${INCOMING_DIR}/release.tar.gz" ]] || fail "the source archive is missing"
+[[ -f "${INCOMING_DIR}/release.sha" ]] || fail "the revision file is missing"
+
+revision="$(tr -d '\r\n' < "${INCOMING_DIR}/release.sha")"
+[[ "${revision}" =~ ^[0-9a-f]{40}$ ]] || fail "the revision is invalid"
+
+install -d -o root -g root -m 0700 "${PROCESSING_DIR}"
+processing_archive="${PROCESSING_DIR}/${revision}-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
+mv -- "${INCOMING_DIR}/release.tar.gz" "${processing_archive}"
+rm -f -- "${INCOMING_DIR}/release.sha"
+chown root:root "${processing_archive}"
+chmod 0600 "${processing_archive}"
+
+/usr/bin/python3 - "${processing_archive}" <<'PY'
+import pathlib
+import sys
+import tarfile
+
+archive = sys.argv[1]
+total_size = 0
+member_count = 0
+
+with tarfile.open(archive, "r:gz") as bundle:
+    for member in bundle:
+        member_count += 1
+        path = pathlib.PurePosixPath(member.name)
+
+        if member_count > 200_000:
+            raise SystemExit("archive contains too many entries")
+        if not member.name or path.is_absolute() or ".." in path.parts:
+            raise SystemExit(f"unsafe archive path: {member.name!r}")
+        if not (member.isdir() or member.isreg()):
+            raise SystemExit(f"unsupported archive entry: {member.name!r}")
+
+        total_size += member.size
+        if total_size > 1_073_741_824:
+            raise SystemExit("archive expands beyond 1 GiB")
+PY
+
+install -d -o memoried -g memoried -m 0755 "${BUILDS_DIR}" "${RELEASES_DIR}"
+build_dir="$(mktemp -d "${BUILDS_DIR}/.build-${revision}.XXXXXX")"
+chown memoried:memoried "${build_dir}"
+
+tar --extract --gzip --file="${processing_archive}" --directory="${build_dir}" --no-same-owner --no-same-permissions
+chown -R memoried:memoried "${build_dir}"
+
+[[ -f "${build_dir}/package.json" ]] || fail "package.json is missing"
+[[ -f "${build_dir}/package-lock.json" ]] || fail "package-lock.json is missing"
+[[ -f "${build_dir}/prisma/schema.prisma" ]] || fail "the Prisma schema is missing"
+
+run_as_memoried() {
+  local unit_name="$1"
+  shift
+
+  systemd-run \
+    --quiet \
+    --wait \
+    --collect \
+    --pipe \
+    --unit="${unit_name}" \
+    --uid=memoried \
+    --gid=memoried \
+    --property="WorkingDirectory=${build_dir}" \
+    --property="EnvironmentFile=${ENV_FILE}" \
+    --setenv="DEPLOYMENT_VERSION=${revision}" \
+    --setenv="NPM_CONFIG_CACHE=${APP_ROOT}/.npm-cache" \
+    --setenv="XDG_CACHE_HOME=${APP_ROOT}/.cache" \
+    --setenv="NEXT_TELEMETRY_DISABLED=1" \
+    "$@"
+}
+
+run_as_memoried "memoried-npm-${revision:0:12}" /usr/bin/npm ci --include=dev --no-audit --no-fund
+run_as_memoried "memoried-build-${revision:0:12}" /usr/bin/npm run build
+
+[[ -f "${build_dir}/.next/standalone/server.js" ]] || fail "the standalone server was not produced"
+
+install -d -o postgres -g postgres -m 0750 "${BACKUP_DIR}"
+backup_work="${build_dir}/database-before-${revision}.dump"
+run_as_memoried \
+  "memoried-backup-${revision:0:12}" \
+  /usr/bin/python3 \
+  -c 'import os, sys, urllib.parse
+parsed = urllib.parse.urlsplit(os.environ["DATABASE_URL"])
+query = urllib.parse.urlencode([(key, value) for key, value in urllib.parse.parse_qsl(parsed.query, keep_blank_values=True) if key != "schema"])
+database_url = urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, query, parsed.fragment))
+os.execv("/usr/bin/pg_dump", ["pg_dump", "--format=custom", "--file=" + sys.argv[1], database_url])' \
+  "${backup_work}"
+backup_final="${BACKUP_DIR}/memoried-before-${revision}-$(date -u +%Y%m%dT%H%M%SZ).dump"
+install -o postgres -g postgres -m 0600 "${backup_work}" "${backup_final}"
+rm -f -- "${backup_work}"
+
+run_as_memoried "memoried-migrate-${revision:0:12}" /usr/bin/npx prisma migrate deploy
+
+release_dir="${RELEASES_DIR}/${revision}"
+if [[ ! -d "${release_dir}" ]]; then
+  release_staging="${RELEASES_DIR}/.${revision}.ready"
+  [[ ! -e "${release_staging}" ]] || fail "a staging release already exists"
+
+  install -d -o memoried -g memoried -m 0755 "${release_staging}/.next/standalone"
+  cp -a -- "${build_dir}/.next/standalone/." "${release_staging}/.next/standalone/"
+
+  install -d -o memoried -g memoried -m 0755 "${release_staging}/.next/standalone/.next/static"
+  cp -a -- "${build_dir}/.next/static/." "${release_staging}/.next/standalone/.next/static/"
+
+  if [[ -d "${build_dir}/public" ]]; then
+    install -d -o memoried -g memoried -m 0755 "${release_staging}/.next/standalone/public"
+    cp -a -- "${build_dir}/public/." "${release_staging}/.next/standalone/public/"
+  fi
+
+  chown -R memoried:memoried "${release_staging}"
+  mv -- "${release_staging}" "${release_dir}"
+  release_staging=""
+fi
+
+[[ -f "${release_dir}/.next/standalone/server.js" ]] || fail "the release is incomplete"
+
+previous_release="$(readlink -f "${CURRENT_LINK}" 2>/dev/null || true)"
+if [[ -n "${previous_release}" && "${previous_release}" != "${RELEASES_DIR}/"* ]]; then
+  fail "the current release points outside the Memoried release directory"
+fi
+
+next_link="${APP_ROOT}/.current-${revision}"
+rm -f -- "${next_link}"
+ln -s -- "${release_dir}" "${next_link}"
+mv -Tf -- "${next_link}" "${CURRENT_LINK}"
+next_link=""
+activated=1
+
+systemctl restart "${SERVICE_NAME}"
+wait_for_health || fail "the new release did not become healthy"
+
+activated=0
+rm -f -- "${processing_archive}"
+printf 'Memoried revision %s is live and healthy.\n' "${revision}"

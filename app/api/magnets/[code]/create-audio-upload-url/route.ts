@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { bucket } from "@/lib/storage";
+import { getSignedUploadUrl } from "@/lib/storage";
 
 type RouteContext = {
   params: Promise<{ code: string }>;
@@ -34,12 +34,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const safeFileName = cleanFileName(fileName);
     const filePath = `memories/${magnet.memory.id}/audios/${Date.now()}-${safeFileName}`;
 
-    const [uploadUrl] = await bucket.file(filePath).getSignedUrl({
-      version: "v4",
-      action: "write",
-      expires: Date.now() + 1000 * 60 * 15,
-      contentType,
-    });
+    const uploadUrl = await getSignedUploadUrl(filePath, contentType);
 
     return NextResponse.json({ uploadUrl, filePath, contentType });
   } catch (error) {

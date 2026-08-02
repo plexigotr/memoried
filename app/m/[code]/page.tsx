@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
-import MemoryMapMode from "@/components/MemoryMapMode";
 import GalleryReveal from "@/components/GalleryReveal";
 import GalleryLightbox from "@/components/GalleryLightbox";
 import AudioPlayer from "@/components/AudioPlayer";
 import GalleryVideoPreview from "@/components/GalleryVideoPreview";
 import { shortLocationName } from "@/lib/memoryMapFormat";
+import LeafletMemoryMapMode from "@/components/LeafletMemoryMapMode";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -237,18 +237,7 @@ export default async function MagnetPage({
 
   if (memory && memory.cover_image_path) {
     try {
-      let actualCoverPath = memory.cover_image_path;
-
-      if (actualCoverPath.startsWith("http")) {
-        const marker = `${process.env.GOOGLE_CLOUD_STORAGE_BUCKET}/`;
-        const index = actualCoverPath.indexOf(marker);
-
-        if (index !== -1) {
-          actualCoverPath = actualCoverPath.substring(index + marker.length);
-        }
-      }
-
-      coverImageUrl = await getSignedImageUrl(actualCoverPath);
+      coverImageUrl = await getSignedImageUrl(memory.cover_image_path);
     } catch (err) {
       console.error("Cover image error:", err);
       coverImageUrl = null;
@@ -266,18 +255,7 @@ export default async function MagnetPage({
               item.item_type === "audio") &&
             item.file_path
           ) {
-            let actualPath = item.file_path;
-
-            if (actualPath.startsWith("http")) {
-              const marker = `${process.env.GOOGLE_CLOUD_STORAGE_BUCKET}/`;
-              const index = actualPath.indexOf(marker);
-
-              if (index !== -1) {
-                actualPath = actualPath.substring(index + marker.length);
-              }
-            }
-
-            const signedUrl = await getSignedMediaUrl(actualPath);
+            const signedUrl = await getSignedMediaUrl(item.file_path);
 
             return {
               ...item,
@@ -293,36 +271,9 @@ export default async function MagnetPage({
       )
     : [];
 
-  const mapModeItems = itemsWithUrls
-    .filter((item) => ["image", "text", "audio"].includes(item.item_type))
-    .map((item) => {
-      const itemTitle =
-        currentLang === "en"
-          ? item.title_en || item.title_tr || item.title || ""
-          : item.title_tr || item.title || "";
-
-      const itemNote =
-        currentLang === "en"
-          ? item.content_text_en || item.content_text_tr || item.content_text || ""
-          : item.content_text_tr || item.content_text || "";
-
-      return {
-        id: item.id.toString(),
-        itemType: item.item_type,
-        title: itemTitle,
-        note: itemNote,
-        imageUrl: item.item_type === "image" ? item.signedUrl : null,
-        mediaUrl: item.item_type !== "image" ? item.signedUrl : null,
-        locationName: item.location_name || null,
-        latitude: item.latitude ?? null,
-        longitude: item.longitude ?? null,
-        rotation: item.rotation ?? 0,
-      };
-    });
-
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-stone-900">
-      <MemoryMapMode lang={currentLang} items={mapModeItems} />
+      <LeafletMemoryMapMode items={itemsWithUrls} />
       <div className="fixed right-5 top-5 z-50">
         <details className="relative">
           <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/30 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/40 transition hover:scale-105 active:scale-95">

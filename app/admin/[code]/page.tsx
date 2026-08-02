@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { hasAdminSession } from "@/lib/auth";
 
 
 type AdminMagnetDetailPageProps = {
@@ -21,8 +21,7 @@ export default async function AdminMagnetDetailPage({
   const { code } = await params;
   const { success, error } = await searchParams;
 
-  const cookieStore = await cookies();
-  const hasAdminAccess = cookieStore.get("admin_access")?.value === "granted";
+  const hasAdminAccess = await hasAdminSession();
 
   if (!hasAdminAccess) {
     redirect("/admin/login");

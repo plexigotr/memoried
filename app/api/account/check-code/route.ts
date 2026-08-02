@@ -1,18 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { twilioClient, verifyServiceSid } from "@/lib/twilio";
+import { createSessionToken, sessionCookieOptions } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
+import { allowRequest, requestIp } from "@/lib/rateLimit";
+import { safeReturnPath } from "@/lib/safeRedirect";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const phoneNumber = String(formData.get("phoneNumber") || "").trim();
     const code = String(formData.get("code") || "").trim();
+    const returnPath = safeReturnPath(String(formData.get("returnTo") || ""));
 
-    if (!phoneNumber || !code) {
+    if (!/^\+[1-9]\d{7,14}$/.test(phoneNumber) || !/^\d{4,10}$/.test(code)) {
       return NextResponse.redirect(
         new URL(`/account/verify?phone=${encodeURIComponent(phoneNumber)}&error=missing-data`, request.url),
         303
       );
     }
+    const ip = requestIp(request.headers);
+    if (!allowRequest(`verify:${ip}:${phoneNumber}`, 10, 15 * 60 * 1000)) {
+      return NextResponse.redirect(
+        new URL("/account/login?error=rate-limited", request.url),
+        303
+      );
+    }
+
+
 
     const result = await twilioClient.verify.v2
       .services(verifyServiceSid)
@@ -23,20 +37,31 @@ export async function POST(request: NextRequest) {
 
     if (result.status !== "approved") {
       return NextResponse.redirect(
-        new URL(`/account/verify?phone=${encodeURIComponent(phoneNumber)}&error=invalid-code`, request.url),
+        new URL(
+          `/account/verify?phone=${encodeURIComponent(phoneNumber)}&error=invalid-code&returnTo=${encodeURIComponent(returnPath)}`,
+          request.url
+        ),
         303
       );
     }
 
+    await prisma.users.upsert({
+      where: { phone_number: phoneNumber },
+      update: {},
+      create: { phone_number: phoneNumber },
+    });
+
     const response = NextResponse.redirect(
-    new URL(`/account`, request.url),
-    303
+      new URL(returnPath, request.url),
+      303
     );
 
-    response.cookies.set("user_phone", phoneNumber, {
-    httpOnly: true,
-    path: "/",
-    });
+    const maxAge = 60 * 60 * 24 * 30;
+    response.cookies.set(
+      "user_phone",
+      createSessionToken("account", phoneNumber, maxAge),
+      sessionCookieOptions(maxAge)
+    );
 
     return response;
   } catch (error) {

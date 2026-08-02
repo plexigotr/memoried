@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
+import { getAccountPhone } from "@/lib/auth";
 
 
 type SetupPageProps = {
@@ -17,6 +18,16 @@ async function activateMagnet(code: string, formData: FormData) {
   "use server";
 
   const selectedLang = String(formData.get("lang") || "tr").trim() === "en" ? "en" : "tr";
+  const phoneNumber = await getAccountPhone();
+  if (!phoneNumber) {
+    redirect(
+      `/account/login?returnTo=${encodeURIComponent(
+        `/m/${code}/setup?lang=${selectedLang}`
+      )}`
+    );
+  }
+
+
 
   const title = String(formData.get("title") || "").trim();
   const location = String(formData.get("location") || "").trim();
@@ -25,8 +36,8 @@ async function activateMagnet(code: string, formData: FormData) {
   const editPassword = String(formData.get("editPassword") || "").trim();
   const editPasswordConfirm = String(formData.get("editPasswordConfirm") || "").trim();
 
-  if (!editPassword || editPassword.length < 4) {
-    throw new Error("Düzenleme şifresi en az 4 karakter olmalı.");
+  if (!editPassword || editPassword.length < 8) {
+    throw new Error("Düzenleme şifresi en az 8 karakter olmalı.");
   }
 
   if (editPassword !== editPasswordConfirm) {
@@ -49,19 +60,20 @@ async function activateMagnet(code: string, formData: FormData) {
     throw new Error("Magnet bulunamadı.");
   }
 
-  const demoUser = await prisma.users.findUnique({
+  const accountUser = await prisma.users.findUnique({
     where: {
-      phone_number: "+905073641591",
+      phone_number: phoneNumber,
     },
   });
 
-  if (!demoUser) {
+  if (!accountUser) {
     throw new Error("Demo kullanıcı bulunamadı.");
   }
 
-  await prisma.memories.create({
+  await prisma.$transaction(async (tx) => {
+    await tx.memories.create({
     data: {
-      user_id: demoUser.id,
+      user_id: accountUser.id,
       magnet_id: magnet.id,
       title: title,
       subtitle: subtitle || null,
@@ -78,15 +90,16 @@ async function activateMagnet(code: string, formData: FormData) {
     },
   });
 
-  await prisma.magnets.update({
+    await tx.magnets.update({
     where: {
       id: magnet.id,
     },
     data: {
-      user_id: demoUser.id,
+      user_id: accountUser.id,
       is_active: true,
       first_activated_at: new Date(),
     },
+  });
   });
 
   redirect(`/m/${code}?lang=${selectedLang}`);
@@ -100,6 +113,15 @@ export default async function SetupPage({
   const { lang } = await searchParams;
 
   const currentLang = lang === "en" ? "en" : "tr";
+  const accountPhone = await getAccountPhone();
+  if (!accountPhone) {
+    redirect(
+      `/account/login?returnTo=${encodeURIComponent(
+        `/m/${code}/setup?lang=${currentLang}`
+      )}`
+    );
+  }
+
   const ui = {
     setupTitle: currentLang === "en" ? "Magnet setup" : "Magnet kurulumu",
     setupText:
@@ -198,6 +220,8 @@ export default async function SetupPage({
             placeholder={currentLang === "en" ? "Set a password" : "Bir şifre belirle"}
             className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
             required
+            minLength={8}
+            autoComplete="new-password"
           />
         </div>
 
@@ -211,6 +235,8 @@ export default async function SetupPage({
             placeholder={currentLang === "en" ? "Confirm password" : "Şifreyi tekrar yaz"}
             className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
             required
+            minLength={8}
+            autoComplete="new-password"
           />
         </div>        
 

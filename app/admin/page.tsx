@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import CopyButton from "@/components/CopyButton";
-import { cookies } from "next/headers";
+import { hasAdminSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 type AdminPageProps = {
@@ -14,8 +14,7 @@ type AdminPageProps = {
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const { error, success } = await searchParams;
 
-  const cookieStore = await cookies();
-  const hasAdminAccess = cookieStore.get("admin_access")?.value === "granted";
+  const hasAdminAccess = await hasAdminSession();
 
   if (!hasAdminAccess) {
     redirect("/admin/login");

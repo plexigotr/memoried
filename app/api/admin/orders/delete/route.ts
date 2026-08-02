@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { hasAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const hasAdminAccess = cookieStore.get("admin_access")?.value === "granted";
+    const hasAdminAccess = await hasAdminSession();
 
     if (!hasAdminAccess) {
       return NextResponse.redirect(new URL("/admin/login", req.url), 303);
