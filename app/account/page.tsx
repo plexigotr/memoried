@@ -1,20 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
+import { getAccountPhone } from "@/lib/auth";
 
-type AccountPageProps = {
-  searchParams: Promise<{
-    phone?: string;
-  }>;
-};
-
-export default async function AccountPage({ searchParams }: AccountPageProps) {
-  const cookieStore = await cookies();
-  const phoneFromCookie = cookieStore.get("user_phone")?.value;
-
-  const { phone } = await searchParams;
-
-  const finalPhone = phone || phoneFromCookie;
+export default async function AccountPage() {
+  const finalPhone = await getAccountPhone();
 
   if (!finalPhone) {
     return (

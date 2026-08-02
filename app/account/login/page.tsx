@@ -1,11 +1,15 @@
+import { safeReturnPath } from "@/lib/safeRedirect";
+
 type LoginPageProps = {
   searchParams: Promise<{
     error?: string;
+    returnTo?: string;
   }>;
 };
 
 export default async function AccountLoginPage({ searchParams }: LoginPageProps) {
-  const { error } = await searchParams;
+  const { error, returnTo } = await searchParams;
+  const returnPath = safeReturnPath(returnTo);
 
   return (
     <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
@@ -33,6 +37,7 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
         )}
 
         <form action="/api/account/send-code" method="POST" className="space-y-5">
+          <input type="hidden" name="returnTo" value={returnPath} />
           <div>
             <label className="mb-2 block text-sm font-medium text-stone-700">
               Telefon Numarası

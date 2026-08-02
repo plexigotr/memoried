@@ -55,6 +55,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
+    // "top" yönü: öğeyi listenin başına taşı
+    if (direction === "top" && currentIndex > 0) {
+      const firstItem = items[0];
+      await prisma.memory_items.update({
+        where: { id: items[currentIndex].id },
+        data: { sort_order: firstItem.sort_order - 1 },
+      });
+      return NextResponse.redirect(new URL(`/m/${code}/edit`, request.url), 303);
+    }
+
     let targetIndex = currentIndex;
 
     if (direction === "up" && currentIndex > 0) {

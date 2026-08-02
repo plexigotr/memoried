@@ -48,9 +48,25 @@ export async function POST(req: NextRequest) {
     },
   });
 
-    const finalUrl = `${paymentUrl}?orderid=${encodeURIComponent(orderCode)}`;
+  let finalUrl: URL;
+  try {
+    finalUrl = new URL(paymentUrl);
+    const host = finalUrl.hostname.toLowerCase();
 
-    return NextResponse.json({
-    paymentUrl: finalUrl,
-    });
+    if (
+      finalUrl.protocol !== "https:" ||
+      (host !== "shopier.com" && !host.endsWith(".shopier.com"))
+    ) {
+      throw new Error("Invalid Shopier payment URL.");
+    }
+  } catch (error) {
+    console.error("Shopier URL configuration error:", error);
+    return NextResponse.json(
+      { message: "Shopier payment URL is invalid." },
+      { status: 500 }
+    );
+  }
+
+  finalUrl.searchParams.set("orderid", orderCode);
+  return NextResponse.json({ paymentUrl: finalUrl.toString() });
 }

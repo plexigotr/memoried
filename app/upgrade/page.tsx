@@ -9,7 +9,7 @@ type UpgradePageProps = {
 };
 
 export default async function UpgradePage({ searchParams }: UpgradePageProps) {
-  const { userId, code, lang } = await searchParams;
+  const { code, lang } = await searchParams;
   const currentLang = lang === "en" ? "en" : "tr";
 
   const ui = {
@@ -25,12 +25,12 @@ export default async function UpgradePage({ searchParams }: UpgradePageProps) {
     free: currentLang === "en" ? "Free" : "Ücretsiz",
     premium: "Premium",
     currentPlan: currentLang === "en" ? "Current plan" : "Mevcut plan",
-    choosePremium: currentLang === "en" ? "Upgrade to Premium" : "Premium’a Yükselt",
+    choosePremium: currentLang === "en" ? "Coming soon" : "Yakında",
     back: currentLang === "en" ? "Back to edit" : "Düzenlemeye dön",
     note:
       currentLang === "en"
         ? "Payment integration will be connected when the project goes live."
-        : "Butona bastığında güvenli iyzico ödeme sayfasına yönlendirileceksin.",
+        : "Premium ödemesi şu anda aktif değil.",
   };
 
   return (
@@ -94,18 +94,13 @@ export default async function UpgradePage({ searchParams }: UpgradePageProps) {
               <li>✓ {currentLang === "en" ? "Premium story experience" : "Premium story deneyimi"}</li>
             </ul>
 
-            <form action="/api/payments/iyzico/initialize" method="POST" className="mt-8">
-              <input type="hidden" name="userId" value={userId || ""} />
-              <input type="hidden" name="code" value={code || ""} />
-              <input type="hidden" name="lang" value={currentLang} />
-
-              <button
-                type="submit"
-                className="w-full rounded-full bg-white px-6 py-3 text-sm font-semibold text-stone-900 transition hover:opacity-90"
-              >
-                {ui.choosePremium}
-              </button>
-            </form>
+            <button
+              type="button"
+              disabled
+              className="mt-8 w-full cursor-not-allowed rounded-full bg-white/60 px-6 py-3 text-sm font-semibold text-stone-700"
+            >
+              {ui.choosePremium}
+            </button>
 
             <p className="mt-4 text-center text-xs text-white/50">{ui.note}</p>
           </article>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { bucket } from "@/lib/storage";
+import { uploadMediaObject } from "@/lib/storage";
 
 type RouteContext = {
   params: Promise<{
@@ -63,20 +63,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const safeFileName = `${Date.now()}-${originalName}`;
     const filePath = `memories/${magnet.memory.id}/audios/${safeFileName}`;
 
-    const bucketFile = bucket.file(filePath);
-
-    await new Promise((resolve, reject) => {
-      const stream = bucketFile.createWriteStream({
-        resumable: false,
-        metadata: {
-          contentType: file.type || `audio/${extension}`,
-        },
-      });
-
-      stream.on("error", reject);
-      stream.on("finish", () => resolve(true));
-      stream.end(buffer);
-    });
+    await uploadMediaObject(
+      filePath,
+      new Uint8Array(buffer),
+      file.type || `audio/${extension}`
+    );
 
     const lastSortOrder =
       Math.max(0, ...magnet.memory.memory_items.map((item) => item.sort_order)) ||

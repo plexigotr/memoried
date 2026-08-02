@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { bucket } from "@/lib/storage";
+import { uploadMediaObject } from "@/lib/storage";
 import sharp from "sharp";
 
 export const runtime = "nodejs";
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       const image = sharp(originalBuffer);
       const metadata = await image.metadata();
 
-      const maxWidth = 1600;
+      const maxWidth = 2048;
       let resized = image;
 
       if (metadata.width && metadata.width > maxWidth) {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
       processedBuffer = await resized
         .webp({
-          quality: 80,
+          quality: 85,
         })
         .toBuffer();
 
@@ -125,33 +125,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const safeFileName = `${Date.now()}-${originalName}.${extension}`;
     const filePath = `memories/${magnet.memory.id}/${safeFileName}`;
 
-    const token = await bucket.storage.authClient.getAccessToken();
-
-    if (!token) {
-      throw new Error("Failed to get Google Cloud access token.");
-    }
-
-    const uploadUrl = `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(
-      bucket.name
-    )}/o?uploadType=media&name=${encodeURIComponent(filePath)}`;
-
-    const uploadResponse = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": contentType,
-        "Content-Length": String(processedBuffer.length),
-      },
-      body: new Uint8Array(processedBuffer),
-    });
-
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-
-      throw new Error(
-        `GCS REST upload failed: ${uploadResponse.status} ${errorText}`
-      );
-    }
+    await uploadMediaObject(
+      filePath,
+      new Uint8Array(processedBuffer),
+      contentType
+    );
 
     const lastSortOrder =
       magnet.memory.memory_items.sort((a, b) => b.sort_order - a.sort_order)[0]

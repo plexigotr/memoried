@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { hasAdminSession } from "@/lib/auth";
 
 function padNumber(number: number) {
   return String(number).padStart(4, "0");
@@ -7,6 +8,13 @@ function padNumber(number: number) {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!(await hasAdminSession())) {
+      return NextResponse.redirect(
+        new URL("/admin/login", request.url),
+        303
+      );
+    }
+
     const formData = await request.formData();
 
     const prefix = String(formData.get("prefix") || "SM-ALC").trim();

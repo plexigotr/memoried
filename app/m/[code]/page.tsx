@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
-import MemoryMapMode from "@/components/MemoryMapMode";
+import GalleryReveal from "@/components/GalleryReveal";
+import GalleryLightbox from "@/components/GalleryLightbox";
+import AudioPlayer from "@/components/AudioPlayer";
+import GalleryVideoPreview from "@/components/GalleryVideoPreview";
+import { shortLocationName } from "@/lib/memoryMapFormat";
+import LeafletMemoryMapMode from "@/components/LeafletMemoryMapMode";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -232,18 +237,7 @@ export default async function MagnetPage({
 
   if (memory && memory.cover_image_path) {
     try {
-      let actualCoverPath = memory.cover_image_path;
-
-      if (actualCoverPath.startsWith("http")) {
-        const marker = `${process.env.GOOGLE_CLOUD_STORAGE_BUCKET}/`;
-        const index = actualCoverPath.indexOf(marker);
-
-        if (index !== -1) {
-          actualCoverPath = actualCoverPath.substring(index + marker.length);
-        }
-      }
-
-      coverImageUrl = await getSignedImageUrl(actualCoverPath);
+      coverImageUrl = await getSignedImageUrl(memory.cover_image_path);
     } catch (err) {
       console.error("Cover image error:", err);
       coverImageUrl = null;
@@ -261,18 +255,7 @@ export default async function MagnetPage({
               item.item_type === "audio") &&
             item.file_path
           ) {
-            let actualPath = item.file_path;
-
-            if (actualPath.startsWith("http")) {
-              const marker = `${process.env.GOOGLE_CLOUD_STORAGE_BUCKET}/`;
-              const index = actualPath.indexOf(marker);
-
-              if (index !== -1) {
-                actualPath = actualPath.substring(index + marker.length);
-              }
-            }
-
-            const signedUrl = await getSignedMediaUrl(actualPath);
+            const signedUrl = await getSignedMediaUrl(item.file_path);
 
             return {
               ...item,
@@ -288,36 +271,9 @@ export default async function MagnetPage({
       )
     : [];
 
-  const mapModeItems = itemsWithUrls
-    .filter((item) => ["image", "text", "video", "audio"].includes(item.item_type))
-    .map((item) => {
-      const itemTitle =
-        currentLang === "en"
-          ? item.title_en || item.title_tr || item.title || ""
-          : item.title_tr || item.title || "";
-
-      const itemNote =
-        currentLang === "en"
-          ? item.content_text_en || item.content_text_tr || item.content_text || ""
-          : item.content_text_tr || item.content_text || "";
-
-      return {
-        id: item.id.toString(),
-        itemType: item.item_type,
-        title: itemTitle,
-        note: itemNote,
-        imageUrl: item.item_type === "image" ? item.signedUrl : null,
-        mediaUrl: item.item_type !== "image" ? item.signedUrl : null,
-        locationName: item.location_name || null,
-        latitude: item.latitude ?? null,
-        longitude: item.longitude ?? null,
-        rotation: item.rotation ?? 0,
-      };
-    });
-
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-stone-900">
-      <MemoryMapMode lang={currentLang} items={mapModeItems} />
+      <LeafletMemoryMapMode items={itemsWithUrls} />
       <div className="fixed right-5 top-5 z-50">
         <details className="relative">
           <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/30 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/40 transition hover:scale-105 active:scale-95">
@@ -377,7 +333,7 @@ export default async function MagnetPage({
           <img
             src={coverImageUrl}
             alt={memoryTitle || ui.coverAlt}
-            className="h-full w-full object-cover"
+            className="memory-cover-image"
             style={{
               objectPosition: `center ${coverPositionPercent}%`,
             }}
@@ -460,7 +416,7 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
+                    className="gallery-item rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
                     {itemTitle ? (
                       <h2 className="mb-3 text-xl font-medium text-stone-900">
@@ -478,24 +434,60 @@ export default async function MagnetPage({
               }
 
               if (item.item_type === "image" && item.signedUrl) {
+                const rotation = Number(item.rotation || 0);
+                const normalizedRot = ((rotation % 360) + 360) % 360;
+                const isRotated90 = normalizedRot === 90 || normalizedRot === 270;
+                const imgTransform = isRotated90
+                  ? `rotate(${rotation}deg) scale(1.25)`
+                  : rotation !== 0 ? `rotate(${rotation}deg)` : undefined;
+
+                const itemCaption =
+                  currentLang === "en"
+                    ? item.content_text_en || item.content_text_tr || item.content_text
+                    : item.content_text_tr || item.content_text;
+
                 return (
                   <article
                     key={item.id.toString()}
-                    className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
+                    data-lightbox-src={item.signedUrl}
+                    data-lightbox-title={itemTitle || ""}
+                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/80 shadow-[0_28px_72px_rgba(100,70,40,0.17),0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur-xl cursor-pointer"
                   >
                     <div className="memory-gallery-image-wrap">
                       <img
                         src={item.signedUrl}
-                        alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
-                        className="memory-gallery-image"
-                        style={{ transform: `rotate(${Number(item.rotation || 0)}deg)` }}
+                        alt=""
+                        aria-hidden="true"
+                        className="memory-gallery-image-bg"
                       />
-                      {itemTitle ? (
-                        <div className="memory-gallery-title-overlay">
-                          {itemTitle}
-                        </div>
-                      ) : null}
+                      <img
+                        src={item.signedUrl}
+                        alt={itemTitle || (currentLang === "en" ? "Memory image" : "Anı görseli")}
+                        className={`memory-gallery-image${isRotated90 ? " memory-gallery-image--rotated" : ""}`}
+                        style={imgTransform ? { transform: imgTransform } : undefined}
+                      />
                     </div>
+                    {(itemTitle || item.location_name || itemCaption) ? (
+                      <div className="gallery-polaroid-strip">
+                        {itemTitle ? (
+                          <p className="gallery-polaroid-title">{itemTitle}</p>
+                        ) : null}
+                        {item.location_name ? (() => {
+                          const city = shortLocationName(item.location_name).split(",").pop()?.trim() || "";
+                          return city ? (
+                            <p className="gallery-polaroid-location">
+                              <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13" aria-hidden="true">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              </svg>
+                              {city}
+                            </p>
+                          ) : null;
+                        })() : null}
+                        {itemCaption ? (
+                          <p className="gallery-polaroid-caption">{itemCaption}</p>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </article>
                 );
               }
@@ -504,19 +496,12 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="overflow-hidden rounded-[2.5rem] border border-white/70 bg-white/75 p-3 shadow-[0_30px_80px_rgba(120,90,60,0.14)] backdrop-blur-xl"
+                    className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/80 shadow-[0_28px_72px_rgba(100,70,40,0.17),0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur-xl"
                   >
-                    <div className="overflow-hidden rounded-2xl">
-                      <video
-                        controls
-                        src={item.signedUrl}
-                        poster={`${item.signedUrl}#t=2`}
-                        className="w-full rounded-[2rem]"
-                      />
-                    </div>
+                    <GalleryVideoPreview src={item.signedUrl} lang={currentLang} />
 
                     {itemTitle ? (
-                      <div className="p-5">
+                      <div className="px-5 py-4">
                         <h2 className="text-lg font-medium text-stone-900">
                           {itemTitle}
                         </h2>
@@ -530,19 +515,13 @@ export default async function MagnetPage({
                 return (
                   <article
                     key={item.id.toString()}
-                    className="rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
+                    className="gallery-item rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
                   >
                     <p className="mb-3 text-xs uppercase tracking-[0.3em] text-stone-400">
-                      Sesli Anı
+                      {currentLang === "en" ? "Voice memory" : "Sesli Anı"}
                     </p>
 
-                    {itemTitle ? (
-                      <h2 className="mb-4 text-lg font-medium text-stone-900">
-                        {itemTitle}
-                      </h2>
-                    ) : null}
-
-                    <audio controls className="w-full" src={item.signedUrl} />
+                    <AudioPlayer src={item.signedUrl} title={itemTitle} lang={currentLang} />
                   </article>
                 );
               }
@@ -580,6 +559,8 @@ export default async function MagnetPage({
         </div>
       </section>
 
+      <GalleryReveal />
+      <GalleryLightbox />
       <p className="pb-10 pt-10 text-center text-[10px] uppercase tracking-[0.35em] text-stone-400">
         {ui.storyCreatedWith}
       </p>

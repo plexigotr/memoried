@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { bucket } from "@/lib/storage";
+import { uploadMediaObject } from "@/lib/storage";
 import { promises as fs } from "fs";
-import path from "path";
 import os from "os";
 import { spawn } from "child_process";
 
@@ -17,7 +16,7 @@ type RouteContext = {
 
 function runFfmpeg(args: string[]) {
   return new Promise<void>((resolve, reject) => {
-    const ffmpeg = spawn(ffmpegPath, args);
+    const ffmpeg = spawn(/* turbopackIgnore: true */ ffmpegPath, args);
 
     let stderr = "";
 
@@ -41,7 +40,7 @@ function runFfmpeg(args: string[]) {
 
 function runFfprobeDuration(filePath: string) {
   return new Promise<number>((resolve, reject) => {
-    const ffprobe = spawn(ffprobePath, [
+    const ffprobe = spawn(/* turbopackIgnore: true */ ffprobePath, [
       "-v",
       "error",
       "-show_entries",
@@ -80,6 +79,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
   const { code } = await context.params;
 
   let inputPath = "";
+  let tempDirectory = "";
   let outputPath = "";
 
   try {
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       magnet.user?.premium_until &&
       magnet.user.premium_until > new Date();
 
-    let maxVideos = isPremium ? 10 : 1;
+    const maxVideos = isPremium ? 10 : 1;
 
     if (videoCount >= maxVideos) {
       return NextResponse.redirect(
@@ -135,12 +135,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const tmpDir = os.tmpdir();
-    const inputName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-    const outputName = `${Date.now()}-optimized.mp4`;
-
-    inputPath = path.join(tmpDir, inputName);
-    outputPath = path.join(tmpDir, outputName);
+    const temporaryRoot = os.tmpdir().replace(/[\\\/]$/, "");
+    tempDirectory = await fs.mkdtemp(`${temporaryRoot}/memoried-video-`);
+    inputPath = `${tempDirectory}/input-upload`;
+    outputPath = `${tempDirectory}/output.mp4`;
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
@@ -153,7 +151,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const selectedDuration = safeTrimEnd - safeTrimStart;
 
     if (selectedDuration <= 0) {
-      await fs.unlink(inputPath).catch(() => {});
       return NextResponse.redirect(
         new URL(`/m/${code}/edit?error=invalid-trim-range`, request.url),
         303
@@ -161,7 +158,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     if (selectedDuration > 60) {
-      await fs.unlink(inputPath).catch(() => {});
       return NextResponse.redirect(
         new URL(`/m/${code}/edit?error=video-too-long`, request.url),
         303
@@ -193,15 +189,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
       outputPath,
     ]);
 
-    const optimizedBuffer = await fs.readFile(outputPath);
+    const optimizedBuffer = await fs.readFile(
+      /* turbopackIgnore: true */ outputPath
+    );
 
     const filePath = `memories/${magnet.memory.id}/videos/${Date.now()}.mp4`;
-    const bucketFile = bucket.file(filePath);
-
-    await bucketFile.save(optimizedBuffer, {
-      contentType: "video/mp4",
-      resumable: false,
-    });
+    await uploadMediaObject(
+      filePath,
+      new Uint8Array(optimizedBuffer),
+      "video/mp4"
+    );
 
     const lastSortOrder =
       Math.max(0, ...magnet.memory.memory_items.map((item) => item.sort_order)) || 0;
@@ -226,7 +223,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
       303
     );
   } finally {
-    if (inputPath) await fs.unlink(inputPath).catch(() => {});
-    if (outputPath) await fs.unlink(outputPath).catch(() => {});
+    if (tempDirectory) {
+      await fs.rm(tempDirectory, { recursive: true, force: true }).catch(
+        () => {}
+      );
+    }
   }
 }
