@@ -157,9 +157,12 @@ install -d -o postgres -g postgres -m 0750 "${BACKUP_DIR}"
 backup_work="${build_dir}/database-before-${revision}.dump"
 run_as_memoried \
   "memoried-backup-${revision:0:12}" \
-  /usr/bin/bash \
-  -c 'exec /usr/bin/pg_dump --format=custom --file="$1" "$DATABASE_URL"' \
-  memoried-pg-dump \
+  /usr/bin/python3 \
+  -c 'import os, sys, urllib.parse
+parsed = urllib.parse.urlsplit(os.environ["DATABASE_URL"])
+query = urllib.parse.urlencode([(key, value) for key, value in urllib.parse.parse_qsl(parsed.query, keep_blank_values=True) if key != "schema"])
+database_url = urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, query, parsed.fragment))
+os.execv("/usr/bin/pg_dump", ["pg_dump", "--format=custom", "--file=" + sys.argv[1], database_url])' \
   "${backup_work}"
 backup_final="${BACKUP_DIR}/memoried-before-${revision}-$(date -u +%Y%m%dT%H%M%SZ).dump"
 install -o postgres -g postgres -m 0600 "${backup_work}" "${backup_final}"
