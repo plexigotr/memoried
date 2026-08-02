@@ -10,8 +10,8 @@ import ImageUploadForm from "@/components/ImageUploadForm";
 import ScrollPreserver from "@/components/ScrollPreserver";
 import DragSort from "@/components/DragSort";
 import { hasEditSession } from "@/lib/auth";
+import PhotoLocationButton from "@/components/PhotoLocationButton";
 import { redirect } from "next/navigation";
-import OSMLocationPicker from '@/components/OSMLocationPicker';
 
 type EditPageProps = {
   params: Promise<{ code: string }>;
@@ -755,7 +755,14 @@ export default async function EditPage({
                               : "Henüz konum eklenmedi. Sonradan ekleyebilirsin."}
                           </p>
                         </div>
-                        <OSMLocationPicker />
+                        <PhotoLocationButton
+                          lang={currentLang}
+                          code={code}
+                          itemId={item.id.toString()}
+                          initialLocationName={item.location_name}
+                          initialLatitude={item.latitude}
+                          initialLongitude={item.longitude}
+                        />
                       </div>
 
                       {memory.cover_image_path === item.file_path && (
@@ -856,7 +863,14 @@ export default async function EditPage({
                               : "Henüz konum eklenmedi."}
                           </p>
                         </div>
-                        <OSMLocationPicker />
+                        <PhotoLocationButton
+                          lang={currentLang}
+                          code={code}
+                          itemId={item.id.toString()}
+                          initialLocationName={item.location_name}
+                          initialLatitude={item.latitude}
+                          initialLongitude={item.longitude}
+                        />
                       </div>
                     </div>
                     ) : item.item_type === "audio" && item.signedUrl ? (

@@ -33,13 +33,13 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (!filePath.startsWith(`memories/${magnet.memory.id}/`)) {
       return NextResponse.json({ error: "invalid-file-path" }, { status: 400 });
+    }
+
     if (!(await mediaObjectExists(filePath))) {
       return NextResponse.json(
         { error: "upload-not-found" },
         { status: 409 }
       );
-    }
-
     }
 
     const lastSortOrder =
