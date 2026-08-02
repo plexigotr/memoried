@@ -148,7 +148,7 @@ run_as_memoried() {
     "$@"
 }
 
-run_as_memoried "memoried-npm-${revision:0:12}" /usr/bin/npm ci --no-audit --no-fund
+run_as_memoried "memoried-npm-${revision:0:12}" /usr/bin/npm ci --include=dev --no-audit --no-fund
 run_as_memoried "memoried-build-${revision:0:12}" /usr/bin/npm run build
 
 [[ -f "${build_dir}/.next/standalone/server.js" ]] || fail "the standalone server was not produced"
