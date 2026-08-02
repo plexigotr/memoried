@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly INCOMING_DIR="/var/lib/memoried-deploy/incoming"
+readonly MAX_ARCHIVE_BYTES=$((200 * 1024 * 1024))
+
+fail() {
+  printf 'Deploy rejected: %s\n' "$1" >&2
+  exit 1
+}
+
+if [[ "${SSH_ORIGINAL_COMMAND:-}" =~ ^deploy\ ([0-9a-f]{40})$ ]]; then
+  revision="${BASH_REMATCH[1]}"
+else
+  fail "expected deploy followed by a 40-character Git revision"
+fi
+
+umask 077
+mkdir -p "${INCOMING_DIR}"
+
+exec 9>"${INCOMING_DIR}/receive.lock"
+flock -n 9 || fail "another deployment upload is already running"
+
+temporary_archive="$(mktemp "${INCOMING_DIR}/.release.XXXXXX")"
+trap 'rm -f -- "${temporary_archive}"' EXIT
+
+cat > "${temporary_archive}"
+
+archive_bytes="$(stat -c '%s' "${temporary_archive}")"
+if (( archive_bytes < 1 || archive_bytes > MAX_ARCHIVE_BYTES )); then
+  fail "source archive is empty or larger than 200 MB"
+fi
+
+mv -f -- "${temporary_archive}" "${INCOMING_DIR}/release.tar.gz"
+printf '%s\n' "${revision}" > "${INCOMING_DIR}/release.sha"
+trap - EXIT
+
+sudo /usr/local/sbin/memoried-activate
