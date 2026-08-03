@@ -1,4 +1,4 @@
-export function cleanMemoryNote(value: unknown): string {
+export function cleanMemoryNoteh(value: unknown): string {
   if (!value) return "";
   if (typeof value === "string") {
     const trimmed = value.trim();
@@ -39,7 +39,7 @@ export function shortLocationName(value: unknown): string {
     .map((p) => p.trim())
     .filter(Boolean)
     .filter((p) => !/^no[:\s]/i.test(p))
-    .filter((p) => !/sokak|cadde|mahallesi|mah\.|no:/i.test(p));
+    .filter((p) => !/sokak|cadde|mahallesi|mah\.|no:|bölge/i.test(p));
 
   const countryIndex = parts.findIndex((p) => /türkiye|turkey|greece|italy|france|spain|germany|macedonia|bulgaria|romania|albania|croatia|serbia/i.test(p));
   const beforeCountry = countryIndex >= 0 ? parts.slice(0, countryIndex) : parts;
