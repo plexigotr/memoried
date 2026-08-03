@@ -25,7 +25,7 @@ export function shortLocationName(raw?: string | null): string {
   const text = String(raw).trim();
   if (!text) return "";
   const parts = text.split(",").map((p) => p.trim()).filter(Boolean);
-  const useful = parts.filter((p) => !/no:|sokak|cadde|mahallesi|mah\.|street|road|avenue|\d/.test(p.toLowerCase()));
+  const useful = parts.filter((p) => !/no:|sokak|cadde|mahallesi|mah\.|street|road|avenue|bölge|\d/.test(p.toLowerCase()));
   if (useful.length >= 2) return useful.slice(-2).join(", ");
   return parts.slice(-2).join(", ") || text;
 }
