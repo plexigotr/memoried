@@ -5,13 +5,7 @@ import { MapContainer, Marker, Polyline, TileLayer, useMap } from "react-leaflet
 import L from "leaflet";
 import { displayMemoryName, getLatLng, hasValidLocation, type LocationItem } from "@/lib/osmLocation";
 
-const markerIcon = new L.Icon({
-  iconUrl: "/leaflet/marker-icon.png",
-  iconRetinaUrl: "/leaflet/marker-icon-2x.png",
-  shadowUrl: "/leaflet/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+const markerIcon = L.divIcon({ className: "memory-map-pin", html: '<span class="memory-map-pin-dot"></span>', iconSize: [22, 22], iconAnchor: [11, 11] });
 function MapController({ active }: { active: [number, number] | null }) {
   const map = useMap();
   if (active) setTimeout(() => map.flyTo(active, 12, { duration: 0.8 }), 0);
@@ -40,7 +34,7 @@ export default function LeafletMemoryMapMode({ items }: { items: LocationItem[] 
           <div className="leaflet-memory-header"><div><span>Anı Haritası</span><h2>{activeItem ? displayMemoryName(activeItem) : "Konumlu anılar"}</h2></div><button type="button" onClick={() => setOpen(false)}>Galeri Modu</button></div>
           <div className="leaflet-memory-map">
             <MapContainer center={center as [number, number]} zoom={route.length ? 7 : 5} style={{ height: "100%", width: "100%" }}>
-              <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png" subdomains="abcd" />
               {route.length > 1 ? <Polyline positions={route} pathOptions={{ color: "#d8a85f", weight: 4, opacity: 0.9 }} /> : null}
               {located.map((item, index) => {
                 const pos = getLatLng(item);
