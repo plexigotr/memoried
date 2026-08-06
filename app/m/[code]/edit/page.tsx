@@ -10,8 +10,8 @@ import ImageUploadForm from "@/components/ImageUploadForm";
 import ScrollPreserver from "@/components/ScrollPreserver";
 import DragSort from "@/components/DragSort";
 import { hasEditSession } from "@/lib/auth";
-import PhotoLocationButton from "@/components/PhotoLocationButton";
 import { redirect } from "next/navigation";
+import OSMLocationPicker from '@/components/OSMLocationPicker';
 
 type EditPageProps = {
   params: Promise<{ code: string }>;
@@ -644,6 +644,40 @@ export default async function EditPage({
                       </h3>
                     ) : null}
 
+                    <form
+                      action={`/api/magnets/${code}/update-item-date`}
+                      method="POST"
+                      className="mb-3 flex flex-wrap items-end gap-3 rounded-2xl border border-stone-200 bg-white p-3"
+                    >
+                      <input type="hidden" name="itemId" value={item.id.toString()} />
+                      <div className="min-w-0 flex-1">
+                        <label className="block text-xs font-medium text-stone-700">
+                          {currentLang === "en" ? "Memory date" : "Anı tarihi"}
+                        </label>
+                        <p className="mt-0.5 text-[11px] text-stone-400">
+                          {currentLang === "en"
+                            ? "Used to order the story as a timeline."
+                            : "Hikâyeyi zaman çizelgesine göre sıralamak için kullanılır."}
+                        </p>
+                        <input
+                          type="date"
+                          name="memory_date"
+                          defaultValue={
+                            item.memory_date
+                              ? new Date(item.memory_date).toISOString().slice(0, 10)
+                              : ""
+                          }
+                          className="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white"
+                      >
+                        {currentLang === "en" ? "Save date" : "Tarihi kaydet"}
+                      </button>
+                    </form>
+
                   {item.item_type === "image" && item.signedUrl ? (
                     <div className="space-y-4">
                       <div
@@ -755,14 +789,7 @@ export default async function EditPage({
                               : "Henüz konum eklenmedi. Sonradan ekleyebilirsin."}
                           </p>
                         </div>
-                        <PhotoLocationButton
-                          lang={currentLang}
-                          code={code}
-                          itemId={item.id.toString()}
-                          initialLocationName={item.location_name}
-                          initialLatitude={item.latitude}
-                          initialLongitude={item.longitude}
-                        />
+                        <OSMLocationPicker />
                       </div>
 
                       {memory.cover_image_path === item.file_path && (
@@ -863,14 +890,7 @@ export default async function EditPage({
                               : "Henüz konum eklenmedi."}
                           </p>
                         </div>
-                        <PhotoLocationButton
-                          lang={currentLang}
-                          code={code}
-                          itemId={item.id.toString()}
-                          initialLocationName={item.location_name}
-                          initialLatitude={item.latitude}
-                          initialLongitude={item.longitude}
-                        />
+                        <OSMLocationPicker />
                       </div>
                     </div>
                     ) : item.item_type === "audio" && item.signedUrl ? (
