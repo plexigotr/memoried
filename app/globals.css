@@ -1529,3 +1529,6 @@ html,body{max-width:100%;overflow-x:hidden}.premium-map-button{position:fixed;ri
 .cover-scroll-cue svg{animation:coverCueBounce 1.9s ease-in-out infinite}
 @keyframes coverCueBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
 @media(prefers-reduced-motion:reduce){.cover-anim,.cover-scroll-cue{animation:none;opacity:1}.cover-scroll-cue svg{animation:none}}
+/* ── Faz 2c: Zaman çizelgesi etiketi ── */
+.memory-timeline-label{display:flex;justify-content:center}
+.memory-timeline-label span{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:999px;background:rgba(255,255,255,.72);border:1px solid rgba(120,90,60,.18);color:#7a5a2e;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 8px 24px rgba(120,90,60,.1)}
