@@ -6,7 +6,7 @@ import GalleryLightbox from "@/components/GalleryLightbox";
 import AudioPlayer from "@/components/AudioPlayer";
 import GalleryVideoPreview from "@/components/GalleryVideoPreview";
 import { shortLocationName } from "@/lib/memoryMapFormat";
-import LeafletMemoryMapMode from "@/components/LeafletMemoryMapLoader";
+import LeafletMemoryMapMode from "@/components/LeafletMemoryMapMode";
 
 type MagnetPageProps = {
   params: Promise<{
@@ -329,7 +329,7 @@ export default async function MagnetPage({
 
       <section className="border-b border-stone-200">
         {coverImageUrl ? (
-          <div className="relative h-[520px] w-full overflow-hidden md:h-[680px]">
+          <div className="relative h-[92vh] min-h-[540px] w-full overflow-hidden">
           <img
             src={coverImageUrl}
             alt={memoryTitle || ui.coverAlt}
@@ -341,30 +341,37 @@ export default async function MagnetPage({
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/5" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.35)_100%)]" />
-            <div className="absolute inset-0 flex items-end justify-center px-6 pb-10">
+            <div className="absolute inset-0 flex items-end justify-center px-6 pb-16">
               <div className="max-w-3xl text-center text-white">
-                <p className="mb-4 text-sm uppercase tracking-[0.3em] text-white/80">
+                <p className="cover-anim cover-anim-1 mb-4 text-sm uppercase tracking-[0.3em] text-white/80">
                   Story Magnet
                 </p>
 
-                <h1 className="mb-4 text-5xl font-semibold leading-[0.95] tracking-[-0.06em] drop-shadow-lg md:text-7xl">
+                <h1 className="cover-anim cover-anim-2 mb-4 text-5xl font-semibold leading-[0.95] tracking-[-0.06em] drop-shadow-lg md:text-7xl">
                   {memoryTitle || ui.memoryReady}
                 </h1>
 
                 {memorySubtitle ? (
-                  <p className="mx-auto mb-6 max-w-2xl text-base leading-7 text-white/90 drop-shadow-md md:text-lg">
+                  <p className="cover-anim cover-anim-3 mx-auto mb-6 max-w-2xl text-base leading-7 text-white/90 drop-shadow-md md:text-lg">
                     {memorySubtitle}
                   </p>
                 ) : null}
 
                 {memoryLocation ? (
-                  <p className="text-sm uppercase tracking-[0.2em] text-white/80 drop-shadow-md">
+                  <p className="cover-anim cover-anim-4 text-sm uppercase tracking-[0.2em] text-white/80 drop-shadow-md">
                     {memoryLocation}
                   </p>
                 ) : null}
 
-    
+
               </div>
+            </div>
+
+            <div className="cover-scroll-cue" aria-hidden="true">
+              <span>{currentLang === "en" ? "Scroll" : "Kaydır"}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
           </div>
         ) : (
