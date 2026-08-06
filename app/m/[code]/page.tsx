@@ -1,3 +1,4 @@
+import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getSignedImageUrl, getSignedMediaUrl } from "@/lib/storage";
@@ -271,9 +272,26 @@ export default async function MagnetPage({
       )
     : [];
 
+  const hasAnyDate = itemsWithUrls.some((item) => item.memory_date);
+
+  const orderedItems = hasAnyDate
+    ? [...itemsWithUrls].sort((a, b) => {
+        const da = a.memory_date ? new Date(a.memory_date).getTime() : Infinity;
+        const db = b.memory_date ? new Date(b.memory_date).getTime() : Infinity;
+        if (da !== db) return da - db;
+        return (a.sort_order ?? 0) - (b.sort_order ?? 0);
+      })
+    : itemsWithUrls;
+
+  const timelineFmt = new Intl.DateTimeFormat(
+    currentLang === "en" ? "en-US" : "tr-TR",
+    { day: "numeric", month: "long", year: "numeric" }
+  );
+  const timelineState = { last: null as string | null };
+
   return (
     <main className="min-h-screen bg-[#f7f2eb] text-stone-900">
-      <LeafletMemoryMapMode items={itemsWithUrls} />
+      <LeafletMemoryMapMode items={orderedItems} />
       <div className="fixed right-5 top-5 z-50">
         <details className="relative">
           <summary className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full border border-white/30 bg-black/30 text-white shadow-lg backdrop-blur-md transition hover:bg-black/40 transition hover:scale-105 active:scale-95">
@@ -405,8 +423,8 @@ export default async function MagnetPage({
 
       <section className="px-6 py-16">
         <div className="mx-auto max-w-3xl space-y-10">
-          {itemsWithUrls.length > 0 ? (
-            itemsWithUrls.map((item) => {
+          {orderedItems.length > 0 ? (
+            orderedItems.map((item) => {
               const itemTitle =
                 currentLang === "en"
                   ? item.title_en || item.title_tr || item.title
@@ -419,8 +437,28 @@ export default async function MagnetPage({
                     item.content_text
                   : item.content_text_tr || item.content_text;
 
+              const itemDate = item.memory_date ? new Date(item.memory_date) : null;
+              const dateKey = itemDate
+                ? `${itemDate.getUTCFullYear()}-${itemDate.getUTCMonth()}-${itemDate.getUTCDate()}`
+                : null;
+              let timelineLabel: ReactNode = null;
+              if (dateKey && dateKey !== timelineState.last) {
+                timelineState.last = dateKey;
+                timelineLabel = (
+                  <div className="memory-timeline-label">
+                    <span>{timelineFmt.format(itemDate!)}</span>
+                  </div>
+                );
+              }
+              const wrap = (node: ReactNode) => (
+                <Fragment key={item.id.toString()}>
+                  {timelineLabel}
+                  {node}
+                </Fragment>
+              );
+
               if (item.item_type === "text") {
-                return (
+                return wrap(
                   <article
                     key={item.id.toString()}
                     className="gallery-item rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
@@ -453,7 +491,7 @@ export default async function MagnetPage({
                     ? item.content_text_en || item.content_text_tr || item.content_text
                     : item.content_text_tr || item.content_text;
 
-                return (
+                return wrap(
                   <article
                     key={item.id.toString()}
                     data-lightbox-src={item.signedUrl}
@@ -500,7 +538,7 @@ export default async function MagnetPage({
               }
 
               if (item.item_type === "video" && item.signedUrl) {
-                return (
+                return wrap(
                   <article
                     key={item.id.toString()}
                     className="gallery-item overflow-hidden rounded-[2.5rem] border border-white/60 bg-white/80 shadow-[0_28px_72px_rgba(100,70,40,0.17),0_2px_12px_rgba(0,0,0,0.06)] backdrop-blur-xl"
@@ -519,7 +557,7 @@ export default async function MagnetPage({
               }
 
               if (item.item_type === "audio" && item.signedUrl) {
-                return (
+                return wrap(
                   <article
                     key={item.id.toString()}
                     className="gallery-item rounded-[2.5rem] border border-white/70 bg-white/75 p-8 shadow-[0_30px_80px_rgba(120,90,60,0.12)] backdrop-blur-xl"
@@ -533,7 +571,7 @@ export default async function MagnetPage({
                 );
               }
 
-              return (
+              return wrap(
                 <article
                   key={item.id.toString()}
                   className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm"
