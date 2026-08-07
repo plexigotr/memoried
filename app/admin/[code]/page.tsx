@@ -252,7 +252,7 @@ export default async function AdminMagnetDetailPage({
 
             {magnet.memory ? (
               <form
-                action="/api/admin/reset-edit-password"
+                action="/admin/reset-edit-password"
                 method="POST"
                 className="space-y-5"
               >
