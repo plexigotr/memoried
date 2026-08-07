@@ -14,16 +14,6 @@ function makeIcon(active: boolean) {
   });
 }
 
-function haversine(a: [number, number], b: [number, number]) {
-  const R = 6371;
-  const dLat = ((b[0] - a[0]) * Math.PI) / 180;
-  const dLng = ((b[1] - a[1]) * Math.PI) / 180;
-  const s =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((a[0] * Math.PI) / 180) * Math.cos((b[0] * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
-}
-
 function MapController({ active }: { active: [number, number] | null }) {
   const map = useMap();
   if (active) setTimeout(() => map.flyTo(active, 12, { duration: 0.8 }), 0);
@@ -39,11 +29,6 @@ export default function LeafletMemoryMapMode({ items }: { items: LocationItem[] 
     () => located.map((item) => getLatLng(item)).filter(Boolean) as [number, number][],
     [located]
   );
-  const totalKm = useMemo(() => {
-    let d = 0;
-    for (let i = 1; i < route.length; i++) d += haversine(route[i - 1], route[i]);
-    return d;
-  }, [route]);
   const activeItem = located[activeIndex] || located[0];
   const activePosition = activeItem ? getLatLng(activeItem) : route[0] || null;
   const center = route[0] || [39, 35];
@@ -88,11 +73,6 @@ export default function LeafletMemoryMapMode({ items }: { items: LocationItem[] 
         <div className="leaflet-memory-modal">
           <div className="leaflet-memory-header"><div><span>Anı Haritası</span><h2>{activeItem ? displayMemoryName(activeItem) : "Konumlu anılar"}</h2></div><button type="button" onClick={() => setOpen(false)}>Galeri Modu</button></div>
           <div className="leaflet-memory-map">
-            {located.length > 1 ? (
-              <div className="leaflet-memory-journey">
-                {located.length} yer{totalKm >= 1 ? ` · ~${Math.round(totalKm)} km` : ""}
-              </div>
-            ) : null}
             <MapContainer center={center as [number, number]} zoom={route.length ? 7 : 5} style={{ height: "100%", width: "100%" }}>
               <TileLayer attribution='&copy; OpenStreetMap contributors' url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png" subdomains="abcd" />
               {route.length > 1 ? <Polyline positions={route} pathOptions={{ color: "#d8a85f", weight: 2, opacity: 0.28, dashArray: "1 9" }} /> : null}

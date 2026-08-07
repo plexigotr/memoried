@@ -30,7 +30,7 @@ export default async function EditPage({
 }: EditPageProps) {
   const { code } = await params;
   const { error, upgraded, lang, uploaded, updated } = await searchParams;
-  
+
 
 
 
@@ -71,120 +71,88 @@ export default async function EditPage({
         : "tr";
 
     redirect(`/m/${code}/edit-login?lang=${editLang}`);
-  }  
+  }
 
   const currentLang =
     lang === "en" || lang === "tr"
       ? lang
       : memory.selected_lang === "en"
       ? "en"
-      : "tr";  
+      : "tr";
+
+  const en = currentLang === "en";
 
   const ui = {
-    editTitle: currentLang === "en" ? "Story Magnet Edit" : "Story Magnet Edit",
-    backToStory: currentLang === "en" ? "Back to Story" : "Story Sayfasına Dön",
-    planLabel: currentLang === "en" ? "Your Plan" : "Planın",
-    freePlan: currentLang === "en" ? "Free" : "Ücretsiz",
+    editTitle: "Story Magnet Edit",
+    backToStory: en ? "Back to Story" : "Story Sayfasına Dön",
+    planLabel: en ? "Your Plan" : "Planın",
+    freePlan: en ? "Free" : "Ücretsiz",
     premiumPlan: "Premium",
-    freePlanText:
-      currentLang === "en"
-        ? "You can upload 10 photos and 1 video."
-        : "10 fotoğraf, 1 video hakkın var.",
-    premiumPlanText:
-      currentLang === "en"
-        ? "You can upload 30 photos and 10 videos."
-        : "30 fotoğraf, 10 video hakkın var.",
-    upgrade:
-      currentLang === "en" ? "Upgrade Plan 🚀" : "Paketi Yükselt 🚀",
-    upgradedSuccess:
-      currentLang === "en"
-        ? "Your plan has been upgraded successfully. Your premium limits are now active."
-        : "Paketin başarıyla yükseltildi. Artık premium limitlerin aktif.",
-    coverSelected:
-      currentLang === "en"
-        ? "Cover image selected."
-        : "Kapak görseli seçildi.",
-    noCoverSelected:
-      currentLang === "en"
-        ? "No cover image selected yet."
-        : "Henüz kapak görseli seçilmedi.",
-    addText: currentLang === "en" ? "Add New Text" : "Yeni Metin Ekle",
-    addPhoto: currentLang === "en" ? "Add New Photo" : "Yeni Fotoğraf Ekle",
-    addVideo: currentLang === "en" ? "Add New Video" : "Yeni Video Ekle",
-    addAudio: currentLang === "en" ? "Add New Audio" : "Yeni Ses Ekle",
-    currentItems:
-      currentLang === "en" ? "Current Contents" : "Mevcut İçerikler",
-    photoTitle:
-      currentLang === "en" ? "Photo Title" : "Fotoğraf Başlığı",
-    photoFile:
-      currentLang === "en" ? "Photo File" : "Fotoğraf Dosyası",
-    uploadPhoto:
-      currentLang === "en" ? "Upload Photo" : "Fotoğrafı Yükle",
-    audioTitle:
-      currentLang === "en" ? "Audio Title" : "Ses Başlığı",
-    audioFile:
-      currentLang === "en" ? "Audio File" : "Ses Dosyası",
-    uploadAudio:
-      currentLang === "en" ? "Upload Audio" : "Sesi Yükle",
-    makeCover:
-      currentLang === "en" ? "Use as Cover" : "Bu Görseli Kapak Yap",
-    moveUp: currentLang === "en" ? "Move Up" : "Yukarı Taşı",
-    moveDown: currentLang === "en" ? "Move Down" : "Aşağı Taşı",
-    delete: currentLang === "en" ? "Delete" : "Sil",
-
-    videoLimit:
-      currentLang === "en"
-        ? "You have reached the video limit. Upgrade your plan to add more videos."
-        : "Video limitine ulaştın. Daha fazla video eklemek için paketi yükseltebilirsin.",
-    videoTooLong:
-      currentLang === "en"
-        ? "Your video is longer than 1 minute. Please choose a section up to 1 minute."
-        : "Video 1 dakikadan uzun. En fazla 1 dakikalık bir bölüm seçebilirsin.",
-    videoUploadFailed:
-      currentLang === "en"
-        ? "Something went wrong while uploading the video."
-        : "Video yüklenirken bir sorun oluştu.",
-    invalidTrimRange:
-      currentLang === "en"
-        ? "Invalid video range selected. Please try again."
-        : "Geçersiz video aralığı seçildi. Lütfen tekrar dene.",
-    order: currentLang === "en" ? "Order" : "Sıra",
-    imageAlt: currentLang === "en" ? "Uploaded image" : "Yüklenen görsel",
-    contentPreviewNotReady:
-      currentLang === "en"
-        ? "Preview is not ready for this content type yet."
-        : "Bu içerik türü için önizleme henüz hazır değil.",
-    noContent:
-      currentLang === "en"
-        ? "No content has been added yet."
-        : "Henüz içerik eklenmemiş.",    
-    photos: currentLang === "en" ? "Photos" : "Fotoğraflar",
-    videos: currentLang === "en" ? "Videos" : "Videolar",
-
-    memoryInfo:
-      currentLang === "en" ? "Memory Details" : "Anı Bilgileri",
-    memoryInfoText:
-      currentLang === "en"
-        ? "Update the title, location and short description shown on the story page."
-        : "Story sayfasında görünen başlık, konum ve kısa açıklamayı düzenle.",
-    memoryTitle:
-      currentLang === "en" ? "Memory Title" : "Anı Başlığı",
-    memoryLocation:
-      currentLang === "en" ? "Location" : "Konum",
-    memorySubtitle:
-      currentLang === "en" ? "Short Description" : "Kısa Açıklama",
-    saveMemoryInfo:
-      currentLang === "en" ? "Save Details" : "Bilgileri Kaydet",
-    memoryInfoUpdated:
-      currentLang === "en"
-        ? "Memory details updated successfully."
-        : "Anı bilgileri başarıyla güncellendi.",
-    memoryTitleRequired:
-      currentLang === "en"
-        ? "Memory title is required."
-        : "Anı başlığı zorunlu.",    
-
-  };      
+    freePlanText: en ? "10 photos, 1 video." : "10 fotoğraf, 1 video hakkın var.",
+    premiumPlanText: en ? "30 photos, 10 videos." : "30 fotoğraf, 10 video hakkın var.",
+    upgrade: en ? "Upgrade Plan 🚀" : "Paketi Yükselt 🚀",
+    upgradedSuccess: en
+      ? "Your plan has been upgraded. Premium limits are now active."
+      : "Paketin yükseltildi. Artık premium limitlerin aktif.",
+    addText: en ? "Add Text" : "Metin Ekle",
+    addPhoto: en ? "Add Photo" : "Fotoğraf Ekle",
+    addVideo: en ? "Add Video" : "Video Ekle",
+    addAudio: en ? "Add Audio" : "Ses Ekle",
+    currentItems: en ? "Story Flow" : "Story Akışı",
+    imageAlt: en ? "Uploaded image" : "Yüklenen görsel",
+    contentPreviewNotReady: en
+      ? "Preview is not ready for this content type yet."
+      : "Bu içerik türü için önizleme henüz hazır değil.",
+    noContent: en ? "No content has been added yet." : "Henüz içerik eklenmemiş.",
+    photos: en ? "Photos" : "Fotoğraflar",
+    videos: en ? "Videos" : "Videolar",
+    order: en ? "Order" : "Sıra",
+    delete: en ? "Delete" : "Sil",
+    moveUp: en ? "Move up" : "Yukarı taşı",
+    moveDown: en ? "Move down" : "Aşağı taşı",
+    save: en ? "Save" : "Kaydet",
+    name: en ? "Name" : "Ad",
+    caption: en ? "Caption" : "Açıklama",
+    memoryDate: en ? "Memory date" : "Anı tarihi",
+    memoryDateHint: en
+      ? "Used to order the story as a timeline."
+      : "Hikâyeyi zaman çizelgesine göre sıralamak için kullanılır.",
+    advanced: en ? "Advanced options" : "Gelişmiş seçenekler",
+    coverBadge: en ? "Cover" : "Kapak",
+    setCover: en ? "Set as cover" : "Kapak yap",
+    selectedCover: en ? "Selected cover" : "Seçili kapak",
+    rotate: en ? "Rotate 90°" : "90° döndür",
+    coverFraming: en ? "Cover framing" : "Kapak kadrajı",
+    coverFramingHint: en ? "Move the focus up or down." : "Görünen alanı yukarı veya aşağı taşı.",
+    top: en ? "Top" : "Üst",
+    center: en ? "Center" : "Orta",
+    bottom: en ? "Bottom" : "Alt",
+    saveFraming: en ? "Save framing" : "Kadrajı kaydet",
+    location: en ? "Location" : "Konum",
+    memoryInfo: en ? "Story information" : "Story bilgileri",
+    memoryInfoText: en
+      ? "Update the title, location and short description shown on the story page."
+      : "Story sayfasında görünen başlık, konum ve kısa açıklamayı düzenle.",
+    memoryTitle: en ? "Memory Title" : "Anı Başlığı",
+    memoryLocation: en ? "Location" : "Konum",
+    memorySubtitle: en ? "Short Description" : "Kısa Açıklama",
+    saveMemoryInfo: en ? "Save Details" : "Bilgileri Kaydet",
+    saved: en ? "Saved." : "Kaydedildi.",
+    memoryInfoUpdated: en ? "Memory details updated." : "Anı bilgileri güncellendi.",
+    memoryTitleRequired: en ? "Memory title is required." : "Anı başlığı zorunlu.",
+    videoLimit: en
+      ? "You have reached the video limit. Upgrade your plan to add more videos."
+      : "Video limitine ulaştın. Daha fazla video eklemek için paketi yükseltebilirsin.",
+    videoTooLong: en
+      ? "Your video is longer than 1 minute. Please choose a section up to 1 minute."
+      : "Video 1 dakikadan uzun. En fazla 1 dakikalık bir bölüm seçebilirsin.",
+    videoUploadFailed: en
+      ? "Something went wrong while uploading the video."
+      : "Video yüklenirken bir sorun oluştu.",
+    invalidTrimRange: en
+      ? "Invalid video range selected. Please try again."
+      : "Geçersiz video aralığı seçildi. Lütfen tekrar dene.",
+  };
 
   const imageCount = memory.memory_items.filter(
     (item) => item.item_type === "image"
@@ -225,440 +193,407 @@ export default async function EditPage({
     })
   );
 
+  const inputClass =
+    "w-full rounded-xl border border-stone-300 px-3 py-2 text-sm outline-none transition focus:border-stone-500";
+  const labelClass = "mb-1 block text-xs font-medium text-stone-600";
+  const primaryBtn =
+    "rounded-full bg-stone-900 px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90";
+  const iconBtn =
+    "inline-flex h-9 w-9 items-center justify-center rounded-xl border border-stone-300 text-stone-600 transition hover:bg-stone-100";
+
+  const notice =
+    updated === "item" || updated === "title" || updated === "date" || updated === "description"
+      ? { tone: "green", text: ui.saved }
+      : updated === "memory-info"
+      ? { tone: "green", text: ui.memoryInfoUpdated }
+      : uploaded === "success"
+      ? { tone: "green", text: en ? "Photo uploaded." : "Fotoğraf yüklendi." }
+      : upgraded === "1"
+      ? { tone: "green", text: ui.upgradedSuccess }
+      : error === "memory-title-required"
+      ? { tone: "red", text: ui.memoryTitleRequired }
+      : error === "video-limit"
+      ? { tone: "amber", text: ui.videoLimit }
+      : error === "video-too-long"
+      ? { tone: "amber", text: ui.videoTooLong }
+      : error === "video-upload-failed"
+      ? { tone: "red", text: ui.videoUploadFailed }
+      : error === "invalid-trim-range"
+      ? { tone: "red", text: ui.invalidTrimRange }
+      : error
+      ? { tone: "red", text: en ? "Something went wrong." : "Bir sorun oluştu." }
+      : null;
+
+  const noticeTone: Record<string, string> = {
+    green: "border-green-200 bg-green-50 text-green-700",
+    red: "border-red-200 bg-red-50 text-red-700",
+    amber: "border-amber-200 bg-amber-50 text-amber-700",
+  };
+
   return (
-    <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
-      <section className="mx-auto max-w-5xl">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <main className="min-h-screen bg-stone-50 px-4 py-10 text-stone-900 md:px-6 md:py-12">
+      <section className="mx-auto max-w-4xl">
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="mb-2 text-sm uppercase tracking-[0.3em] text-stone-500">
+            <p className="mb-2 text-xs uppercase tracking-[0.3em] text-stone-500">
               {ui.editTitle}
             </p>
-            <h1 className="text-3xl font-semibold md:text-5xl">
-              {memory.title}
-            </h1>
-
-            <div className="mt-4 flex gap-3">
-              <Link
-                href={`/m/${code}/edit?lang=tr`}
-                className={`rounded-full px-4 py-2 text-sm font-medium ${
-                  currentLang === "tr"
-                    ? "bg-stone-900 text-white"
-                    : "border border-stone-300 text-stone-700"
-                }`}
-              >
-                Türkçe
-              </Link>
-
-              <Link
-                href={`/m/${code}/edit?lang=en`}
-                className={`rounded-full px-4 py-2 text-sm font-medium ${
-                  currentLang === "en"
-                    ? "bg-stone-900 text-white"
-                    : "border border-stone-300 text-stone-700"
-                }`}
-              >
-                English
-              </Link>
-            </div>
-
-            <div className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <p className="mb-1 text-xs uppercase tracking-[0.25em] text-stone-400">
-                  {ui.planLabel}
-                </p>
-                <p className="text-2xl font-semibold text-stone-900">
-                  {isPremium ? ui.premiumPlan : ui.freePlan}
-                </p>
-                <p className="mt-2 text-sm leading-6 text-stone-500">
-                  {isPremium ? ui.premiumPlanText : ui.freePlanText}
-                </p>
-
-                {isPremium && magnet.user?.premium_until && (
-                  <p className="mt-3 rounded-2xl bg-stone-50 px-3 py-2 text-xs text-stone-500">
-                    {currentLang === "en"
-                      ? `Premium valid until: ${new Date(
-                          magnet.user.premium_until
-                        ).toLocaleDateString("en-US")}`
-                      : `Premium bitiş tarihi: ${new Date(
-                          magnet.user.premium_until
-                        ).toLocaleDateString("tr-TR")}`}
-                  </p>
-                )}
-
-                {!isPremium && (
-                  <Link
-                    href={`/upgrade?userId=${magnet.user?.id.toString()}&code=${code}&lang=${currentLang}`}
-                    className="mt-4 inline-block rounded-full bg-stone-900 px-5 py-2 text-sm font-medium text-white transition hover:opacity-90"
-                  >
-                    {ui.upgrade}
-                  </Link>
-                )}               
-
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <p className="mb-1 text-xs uppercase tracking-[0.25em] text-stone-400">
-                  {ui.photos}
-                </p>
-                <p className="text-2xl font-semibold text-stone-900">
-                  <span className={imageCount >= imageLimit ? "text-red-600" : ""}>
-                    {imageCount}
-                  </span>
-                  <span className="text-stone-400"> / {imageLimit}</span>
-                </p>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-stone-100">
-                  <div
-                    className="h-full rounded-full bg-stone-900"
-                    style={{
-                      width: `${Math.min(100, (imageCount / imageLimit) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
-                <p className="mb-1 text-xs uppercase tracking-[0.25em] text-stone-400">
-                  {ui.videos}
-                </p>
-                <p className="text-2xl font-semibold text-stone-900">
-                  <span className={videoCount >= videoLimit ? "text-red-600" : ""}>
-                    {videoCount}
-                  </span>
-                  <span className="text-stone-400"> / {videoLimit}</span>
-                </p>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-stone-100">
-                  <div
-                    className="h-full rounded-full bg-stone-900"
-                    style={{
-                      width: `${Math.min(100, (videoCount / videoLimit) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-         
-
-            {uploaded === "success" && (
-              <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-                {currentLang === "en"
-                  ? "Photo uploaded successfully."
-                  : "Fotoğraf başarıyla yüklendi."}
-              </div>
-            )}    
-
-
-            {updated === "memory-info" && (
-              <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-                {ui.memoryInfoUpdated}
-              </div>
-            )}
-
-            {error === "memory-title-required" && (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {ui.memoryTitleRequired}
-              </div>
-            )}
-
-            {error === "memory-info-failed" && (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {currentLang === "en"
-                  ? "Something went wrong while updating memory details."
-                  : "Anı bilgileri güncellenirken bir sorun oluştu."}
-              </div>
-            )}                 
-
-            {upgraded === "1" && (
-              <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-                {ui.upgradedSuccess}
-              </div>
-            )}
-
-            {error === "video-limit" && (
-              <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-                {ui.videoLimit}
-              </div>
-            )}
-
-            {error === "video-too-long" && (
-              <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
-                {ui.videoTooLong}
-              </div>
-            )}
-
-            {error === "video-upload-failed" && (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {ui.videoUploadFailed}
-              </div>
-            )}
-
-            {error === "invalid-trim-range" && (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                {ui.invalidTrimRange}
-              </div>
-            )}
-
+            <h1 className="text-3xl font-semibold md:text-4xl">{memory.title}</h1>
             {memory.location_text ? (
-              <p className="mt-3 text-sm uppercase tracking-[0.2em] text-stone-500">
+              <p className="mt-2 text-sm uppercase tracking-[0.2em] text-stone-500">
                 {memory.location_text}
               </p>
             ) : null}
+          </div>
 
-            {memory.cover_image_path ? (
-              <p className="mt-3 text-sm text-stone-500">
-                {ui.coverSelected}
-              </p>
-            ) : (
-              <p className="mt-3 text-sm text-stone-400">
-                {ui.noCoverSelected}
-              </p>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/m/${code}/edit?lang=tr`}
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                currentLang === "tr"
+                  ? "bg-stone-900 text-white"
+                  : "border border-stone-300 text-stone-700"
+              }`}
+            >
+              TR
+            </Link>
+            <Link
+              href={`/m/${code}/edit?lang=en`}
+              className={`rounded-full px-4 py-2 text-sm font-medium ${
+                currentLang === "en"
+                  ? "bg-stone-900 text-white"
+                  : "border border-stone-300 text-stone-700"
+              }`}
+            >
+              EN
+            </Link>
+            <Link
+              href={`/m/${code}`}
+              className="rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
+            >
+              {ui.backToStory}
+            </Link>
+          </div>
+        </div>
+
+        {notice ? (
+          <div className={`mb-6 rounded-2xl border p-4 text-sm ${noticeTone[notice.tone]}`}>
+            {notice.text}
+          </div>
+        ) : null}
+
+        {/* Stats */}
+        <div className="mb-8 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+            <p className="mb-1 text-xs uppercase tracking-[0.2em] text-stone-400">
+              {ui.planLabel}
+            </p>
+            <p className="text-xl font-semibold text-stone-900">
+              {isPremium ? ui.premiumPlan : ui.freePlan}
+            </p>
+            <p className="mt-1 text-xs leading-5 text-stone-500">
+              {isPremium ? ui.premiumPlanText : ui.freePlanText}
+            </p>
+            {!isPremium && (
+              <Link
+                href={`/upgrade?userId=${magnet.user?.id.toString()}&code=${code}&lang=${currentLang}`}
+                className="mt-3 inline-block rounded-full bg-stone-900 px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
+              >
+                {ui.upgrade}
+              </Link>
             )}
           </div>
 
-          <Link
-            href={`/m/${code}`}
-            className="rounded-full border border-stone-300 px-5 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
-          >
-            {ui.backToStory}
-          </Link>
+          <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+            <p className="mb-1 text-xs uppercase tracking-[0.2em] text-stone-400">
+              {ui.photos}
+            </p>
+            <p className="text-xl font-semibold">
+              <span className={imageCount >= imageLimit ? "text-red-600" : "text-stone-900"}>
+                {imageCount}
+              </span>
+              <span className="text-stone-400"> / {imageLimit}</span>
+            </p>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-stone-100">
+              <div
+                className="h-full rounded-full bg-stone-900"
+                style={{ width: `${Math.min(100, (imageCount / imageLimit) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+            <p className="mb-1 text-xs uppercase tracking-[0.2em] text-stone-400">
+              {ui.videos}
+            </p>
+            <p className="text-xl font-semibold">
+              <span className={videoCount >= videoLimit ? "text-red-600" : "text-stone-900"}>
+                {videoCount}
+              </span>
+              <span className="text-stone-400"> / {videoLimit}</span>
+            </p>
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-stone-100">
+              <div
+                className="h-full rounded-full bg-stone-900"
+                style={{ width: `${Math.min(100, (videoCount / videoLimit) * 100)}%` }}
+              />
+            </div>
+          </div>
         </div>
 
-        <section className="mb-8 rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm md:p-6">
-          <div className="mb-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-400">
-              {ui.memoryInfo}
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-stone-900">
-              {currentLang === "en" ? "Story information" : "Story bilgileri"}
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-stone-500">
-              {ui.memoryInfoText}
-            </p>
-          </div>
+        {/* Story information */}
+        <section className="mb-8 rounded-3xl border border-stone-200 bg-white p-5 shadow-sm md:p-6">
+          <h2 className="text-xl font-semibold text-stone-900">{ui.memoryInfo}</h2>
+          <p className="mt-1 text-sm leading-6 text-stone-500">{ui.memoryInfoText}</p>
 
           <form
             action={`/api/magnets/${code}/update-memory-info`}
             method="POST"
-            className="grid gap-5 md:grid-cols-2"
+            className="mt-5 grid gap-4 md:grid-cols-2"
           >
             <input type="hidden" name="lang" value={currentLang} />
-
             <div>
-              <label className="mb-2 block text-sm font-medium text-stone-700">
-                {ui.memoryTitle}
-              </label>
+              <label className={labelClass}>{ui.memoryTitle}</label>
               <input
                 type="text"
                 name="title"
-                defaultValue={
-                  currentLang === "en"
-                    ? memory.title_en || memory.title
-                    : memory.title_tr || memory.title
-                }
-                className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
+                defaultValue={en ? memory.title_en || memory.title : memory.title_tr || memory.title}
+                className={inputClass}
                 required
               />
             </div>
-
             <div>
-              <label className="mb-2 block text-sm font-medium text-stone-700">
-                {ui.memoryLocation}
-              </label>
+              <label className={labelClass}>{ui.memoryLocation}</label>
               <input
                 type="text"
                 name="location"
                 defaultValue={
-                  currentLang === "en"
+                  en
                     ? memory.location_text_en || memory.location_text || ""
                     : memory.location_text_tr || memory.location_text || ""
                 }
-                className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
+                className={inputClass}
               />
             </div>
-
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-medium text-stone-700">
-                {ui.memorySubtitle}
-              </label>
+              <label className={labelClass}>{ui.memorySubtitle}</label>
               <textarea
                 name="subtitle"
-                rows={4}
+                rows={3}
                 defaultValue={
-                  currentLang === "en"
+                  en
                     ? memory.subtitle_en || memory.subtitle || ""
                     : memory.subtitle_tr || memory.subtitle || ""
                 }
-                className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
+                className={inputClass}
               />
             </div>
-
             <div className="md:col-span-2">
-              <button
-                type="submit"
-                className="rounded-full bg-stone-900 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
-              >
+              <button type="submit" className={primaryBtn}>
                 {ui.saveMemoryInfo}
               </button>
             </div>
           </form>
         </section>
 
-        <section className="rounded-[2rem] border border-stone-200 bg-stone-100/60 p-4 shadow-sm md:p-6">
-          <div className="mb-6">
-            <p className="text-xs uppercase tracking-[0.3em] text-stone-400">
-              {currentLang === "en" ? "Add Content" : "İçerik Ekle"}
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold text-stone-900">
-              {currentLang === "en"
-                ? "Build your memory"
-                : "Anını oluştur"}
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-500">
-              {currentLang === "en"
-                ? "Add text, photos, video and audio to shape your story."
-                : "Story akışını oluşturmak için metin, fotoğraf, video ve ses ekleyebilirsin."}
-            </p>
-          </div>
+        {/* Add content */}
+        <section className="mb-8">
+          <h2 className="mb-1 text-xl font-semibold text-stone-900">
+            {en ? "Build your memory" : "Anını oluştur"}
+          </h2>
+          <p className="mb-4 text-sm leading-6 text-stone-500">
+            {en
+              ? "Add text, photos, video and audio to shape your story."
+              : "Story akışını oluşturmak için metin, fotoğraf, video ve ses ekleyebilirsin."}
+          </p>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
-          <div className="space-y-8">
-            <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-xl font-medium">{ui.addText}</h2>
-
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-3 text-base font-medium">{ui.addText}</h3>
               <form
                 action={`/api/magnets/${code}/add-text?lang=${currentLang}`}
                 method="POST"
-                className="space-y-5"
+                className="space-y-3"
               >
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    {currentLang === "tr" ? "Başlık" : "Title"}
-                  </label>
-                  <input
-                    type="text"
-                    name="title"
-                    placeholder={
-                      currentLang === "tr"
-                        ? "Örn. İlk Akşam"
-                        : "e.g. First Evening"
-                    }
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-stone-700">
-                    {currentLang === "tr" ? "Metin" : "Text"}
-                  </label>
-                  <textarea
-                    name="content"
-                    rows={6}
-                    placeholder={
-                      currentLang === "tr"
-                        ? "Anına ait metni buraya yaz"
-                        : "Write the text for your memory here"
-                    }
-                    className="w-full rounded-2xl border border-stone-300 px-4 py-3 outline-none transition focus:border-stone-500"
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="rounded-full bg-stone-900 px-6 py-3 text-sm font-medium text-white transition hover:opacity-90"
-                >
-                  {currentLang === "tr" ? "Metni Kaydet" : "Save Text"}
+                <input
+                  type="text"
+                  name="title"
+                  placeholder={en ? "e.g. First Evening" : "Örn. İlk Akşam"}
+                  className={inputClass}
+                />
+                <textarea
+                  name="content"
+                  rows={4}
+                  placeholder={en ? "Write the text for your memory here" : "Anına ait metni buraya yaz"}
+                  className={inputClass}
+                  required
+                />
+                <button type="submit" className={primaryBtn}>
+                  {ui.save}
                 </button>
               </form>
-            </section>
+            </div>
 
-            <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-xl font-medium">{ui.addPhoto}</h2>
+            <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-3 text-base font-medium">{ui.addPhoto}</h3>
               <ImageUploadForm
                 code={code}
                 lang={currentLang}
                 remainingPhotos={Math.max(0, imageLimit - imageCount)}
               />
-            </section>
-            
-            <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-4 text-xl font-medium">{ui.addVideo}</h2>
-
-              <VideoUploadForm code={code} lang={currentLang} />
-            </section>
-          </div>
-
-          <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-medium">{ui.addAudio}</h2>
-
-            <AudioRecorderForm code={code} lang={currentLang} />
-
-            <AudioFileUploadForm code={code} lang={currentLang} />
-          </section>
-
-          <section className="rounded-[2rem] border border-stone-200 bg-white p-5 shadow-sm md:p-6">
-            <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-stone-400">
-                  {currentLang === "en" ? "Story Flow" : "Story Akışı"}
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold text-stone-900">
-                  {ui.currentItems}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-stone-500">
-                  {currentLang === "en"
-                    ? "Arrange, delete or choose the cover image for your story."
-                    : "Story sıralamasını düzenle, içerikleri sil veya kapak görselini seç."}
-                </p>
-              </div>
             </div>
 
-            {itemsWithUrls.length > 0 ? (
-              <div className="drag-sort-list grid gap-5">
-                {itemsWithUrls.map((item) => (
+            <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-3 text-base font-medium">{ui.addVideo}</h3>
+              <VideoUploadForm code={code} lang={currentLang} />
+            </div>
+
+            <div className="rounded-3xl border border-stone-200 bg-white p-5 shadow-sm">
+              <h3 className="mb-3 text-base font-medium">{ui.addAudio}</h3>
+              <AudioRecorderForm code={code} lang={currentLang} />
+              <AudioFileUploadForm code={code} lang={currentLang} />
+            </div>
+          </div>
+        </section>
+
+        {/* Story flow */}
+        <section>
+          <h2 className="mb-1 text-xl font-semibold text-stone-900">{ui.currentItems}</h2>
+          <p className="mb-4 text-sm leading-6 text-stone-500">
+            {en
+              ? "Drag to reorder, edit each item, delete or choose the cover."
+              : "Sürükleyerek sırala, içerikleri düzenle, sil veya kapak görselini seç."}
+          </p>
+
+          {itemsWithUrls.length > 0 ? (
+            <div className="drag-sort-list grid gap-4">
+              {itemsWithUrls.map((item) => {
+                const isImage = item.item_type === "image";
+                const isVideo = item.item_type === "video";
+                const isCover = isImage && memory.cover_image_path === item.file_path;
+
+                return (
                   <article
                     key={item.id.toString()}
                     data-item-id={item.id.toString()}
-                    className="rounded-3xl border border-stone-200 bg-stone-50/70 p-4 shadow-sm transition hover:bg-stone-50 md:p-5"
+                    className="rounded-3xl border border-stone-200 bg-white p-4 shadow-sm md:p-5"
                   >
-                    {/* Drag handle + meta */}
-                    <div className="mb-2 flex items-center justify-between gap-3">
+                    {/* Card header */}
+                    <div className="mb-3 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <div className="drag-handle" title={currentLang === "en" ? "Drag to reorder" : "Sürükleyerek sırala"}>
+                        <div
+                          className="drag-handle"
+                          title={en ? "Drag to reorder" : "Sürükleyerek sırala"}
+                        >
                           <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18">
-                            <path d="M7 4a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2z"/>
+                            <path d="M7 4a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zm6 0a1 1 0 100 2 1 1 0 000-2z" />
                           </svg>
                         </div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-stone-500">
+                        <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium uppercase tracking-[0.15em] text-stone-500">
                           {item.item_type}
-                        </p>
+                        </span>
+                        {isCover ? (
+                          <span className="rounded-full bg-stone-900 px-3 py-1 text-xs font-medium text-white">
+                            {ui.coverBadge}
+                          </span>
+                        ) : null}
                       </div>
-                      <p className="inline-flex rounded-full bg-white px-3 py-1 text-xs font-medium text-stone-500 shadow-sm">
-                        {ui.order}: {item.sort_order}
-                      </p>
+
+                      <div className="flex items-center gap-2">
+                        <form action={`/api/magnets/${code}/move-item`} method="POST">
+                          <input type="hidden" name="itemId" value={item.id.toString()} />
+                          <input type="hidden" name="direction" value="up" />
+                          <button type="submit" className={iconBtn} title={ui.moveUp} aria-label={ui.moveUp}>
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16"><path strokeLinecap="round" strokeLinejoin="round" d="M10 15V5m0 0l-4 4m4-4l4 4" /></svg>
+                          </button>
+                        </form>
+                        <form action={`/api/magnets/${code}/move-item`} method="POST">
+                          <input type="hidden" name="itemId" value={item.id.toString()} />
+                          <input type="hidden" name="direction" value="down" />
+                          <button type="submit" className={iconBtn} title={ui.moveDown} aria-label={ui.moveDown}>
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16"><path strokeLinecap="round" strokeLinejoin="round" d="M10 5v10m0 0l4-4m-4 4l-4-4" /></svg>
+                          </button>
+                        </form>
+                        <form action={`/api/magnets/${code}/delete-item`} method="POST">
+                          <input type="hidden" name="itemId" value={item.id.toString()} />
+                          <button
+                            type="submit"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-red-300 text-red-600 transition hover:bg-red-50"
+                            title={ui.delete}
+                            aria-label={ui.delete}
+                          >
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h12M8 6V4h4v2m-6 0l.5 9a1 1 0 001 1h3a1 1 0 001-1L14 6" /></svg>
+                          </button>
+                        </form>
+                      </div>
                     </div>
 
-                    {item.title ? (
-                      <h3 className="mb-2 text-lg font-medium text-stone-900">
-                        {item.title}
-                      </h3>
-                    ) : null}
+                    {/* Preview */}
+                    {isImage && item.signedUrl ? (
+                      <div className="mb-4 overflow-hidden rounded-2xl border border-stone-200">
+                        <img
+                          src={item.signedUrl}
+                          alt={item.title || ui.imageAlt}
+                          className="w-full"
+                          style={{
+                            transform: `rotate(${Number(item.rotation || 0)}deg)`,
+                            transition: "transform .25s ease",
+                          }}
+                        />
+                      </div>
+                    ) : isVideo && item.signedUrl ? (
+                      <video
+                        controls
+                        playsInline
+                        className="mb-4 w-full rounded-2xl border border-stone-200"
+                        src={item.signedUrl}
+                      />
+                    ) : item.item_type === "audio" && item.signedUrl ? (
+                      <audio controls className="mb-4 w-full" src={item.signedUrl} />
+                    ) : item.content_text ? (
+                      <p className="mb-4 whitespace-pre-line rounded-2xl bg-stone-50 p-4 text-sm leading-7 text-stone-700">
+                        {item.content_text}
+                      </p>
+                    ) : (
+                      <p className="mb-4 text-sm text-stone-500">{ui.contentPreviewNotReady}</p>
+                    )}
 
+                    {/* Single edit form */}
                     <form
                       action={`/api/magnets/${code}/update-item-date`}
                       method="POST"
-                      className="mb-3 flex flex-wrap items-end gap-3 rounded-2xl border border-stone-200 bg-white p-3"
+                      className="space-y-3 rounded-2xl border border-stone-200 bg-stone-50/70 p-4"
                     >
                       <input type="hidden" name="itemId" value={item.id.toString()} />
-                      <div className="min-w-0 flex-1">
-                        <label className="block text-xs font-medium text-stone-700">
-                          {currentLang === "en" ? "Memory date" : "Anı tarihi"}
-                        </label>
-                        <p className="mt-0.5 text-[11px] text-stone-400">
-                          {currentLang === "en"
-                            ? "Used to order the story as a timeline."
-                            : "Hikâyeyi zaman çizelgesine göre sıralamak için kullanılır."}
-                        </p>
+
+                      {isImage || item.item_type === "text" ? (
+                        <div>
+                          <label className={labelClass}>{ui.name}</label>
+                          <input
+                            name="title"
+                            defaultValue={item.title || ""}
+                            placeholder={en ? "e.g. Alaçatı sunset" : "Örn. Alaçatı gün batımı"}
+                            className={inputClass}
+                          />
+                        </div>
+                      ) : null}
+
+                      {isImage || isVideo ? (
+                        <div>
+                          <label className={labelClass}>{ui.caption}</label>
+                          <textarea
+                            name="description"
+                            rows={2}
+                            defaultValue={item.content_text || ""}
+                            placeholder={en ? "A short note shown in the story…" : "Story'de görünen kısa not…"}
+                            className={inputClass}
+                          />
+                        </div>
+                      ) : null}
+
+                      <div>
+                        <label className={labelClass}>{ui.memoryDate}</label>
                         <input
                           type="date"
                           name="memory_date"
@@ -667,308 +602,133 @@ export default async function EditPage({
                               ? new Date(item.memory_date).toISOString().slice(0, 10)
                               : ""
                           }
-                          className="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
+                          className={inputClass}
                         />
+                        <p className="mt-1 text-[11px] text-stone-400">{ui.memoryDateHint}</p>
                       </div>
-                      <button
-                        type="submit"
-                        className="rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white"
-                      >
-                        {currentLang === "en" ? "Save date" : "Tarihi kaydet"}
+
+                      <button type="submit" className={primaryBtn}>
+                        {ui.save}
                       </button>
                     </form>
 
-                  {item.item_type === "image" && item.signedUrl ? (
-                    <div className="space-y-4">
-                      <div
-                        className={`relative overflow-hidden rounded-2xl border-2 transition hover:scale-[1.01] ${
-                          memory.cover_image_path === item.file_path
-                            ? "border-stone-900 shadow-md"
-                            : "border-transparent"
-                        }`}
-                      >
-                        <img
-                          src={item.signedUrl}
-                          alt={item.title || ui.imageAlt}
-                          className="w-full rounded-2xl"
-                          style={{ transform: `rotate(${Number(item.rotation || 0)}deg)`, transition: "transform .25s ease" }}
-                        />
+                    {/* Advanced options */}
+                    {isImage || isVideo ? (
+                      <details className="group mt-3">
+                        <summary className="flex cursor-pointer list-none items-center gap-2 rounded-2xl border border-stone-200 px-4 py-3 text-sm font-medium text-stone-700 transition hover:bg-stone-50">
+                          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16" className="transition group-open:rotate-180"><path strokeLinecap="round" strokeLinejoin="round" d="M6 8l4 4 4-4" /></svg>
+                          {ui.advanced}
+                        </summary>
 
-                        {memory.cover_image_path === item.file_path && (
-                          <span className="absolute left-3 top-3 rounded-full bg-stone-900 px-3 py-1 text-xs font-medium text-white shadow">
-                            {currentLang === "en" ? "Cover" : "Kapak"}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <form action={`/api/magnets/${code}/update-item-title`} method="POST" className="rounded-2xl border border-stone-200 bg-white p-4">
-                          <input type="hidden" name="itemId" value={item.id.toString()} />
-                          <label className="block text-sm font-medium text-stone-800">
-                            {currentLang === "en" ? "Photo name" : "Fotoğraf adı"}
-                          </label>
-                          <input
-                            name="title"
-                            defaultValue={item.title || ""}
-                            placeholder={currentLang === "en" ? "Example: Alaçatı sunset" : "Örn. Alaçatı gün batımı"}
-                            className="mt-2 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
-                          />
-                          <button type="submit" className="mt-3 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white">
-                            {currentLang === "en" ? "Save name" : "Adı kaydet"}
-                          </button>
-                        </form>
-
-                        <form action={`/api/magnets/${code}/rotate-item`} method="POST" className="rounded-2xl border border-stone-200 bg-white p-4">
-                          <input type="hidden" name="itemId" value={item.id.toString()} />
-                          <p className="text-sm font-medium text-stone-800">
-                            {currentLang === "en" ? "Photo rotation" : "Fotoğraf döndürme"}
-                          </p>
-                          <p className="mt-1 text-xs leading-5 text-stone-500">
-                            {currentLang === "en" ? "Rotate the photo 90° clockwise." : "Fotoğrafı saat yönünde 90° döndür."}
-                          </p>
-                          <button type="submit" className="mt-3 rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-100">
-                            ↻ {currentLang === "en" ? "Rotate" : "Döndür"}
-                          </button>
-                        </form>
-                      </div>
-
-                      {/* Açıklama / Caption */}
-                      <form action={`/api/magnets/${code}/update-item-description`} method="POST" className="rounded-2xl border border-stone-200 bg-white p-4">
-                        <input type="hidden" name="itemId" value={item.id.toString()} />
-                        <label className="block text-sm font-medium text-stone-800">
-                          {currentLang === "en" ? "Caption" : "Açıklama"}
-                        </label>
-                        <p className="mt-0.5 text-xs text-stone-400">
-                          {currentLang === "en"
-                            ? "A short note shown below the photo in the story."
-                            : "Fotoğrafın altında görünen kısa not."}
-                        </p>
-                        <textarea
-                          name="description"
-                          rows={2}
-                          defaultValue={item.content_text || ""}
-                          placeholder={currentLang === "en" ? "e.g. That golden hour in Alaçatı…" : "Örn. Alaçatı'daki o altın saat…"}
-                          className="mt-2 w-full resize-none rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
-                        />
-                        <button type="submit" className="mt-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white">
-                          {currentLang === "en" ? "Save caption" : "Açıklamayı kaydet"}
-                        </button>
-                      </form>
-
-                      <form action={`/api/magnets/${code}/set-cover`} method="POST">
-                        <input type="hidden" name="itemId" value={item.id.toString()} />
-
-                        <button
-                          type="submit"
-                          className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                            memory.cover_image_path === item.file_path
-                              ? "bg-stone-900 text-white"
-                              : "border border-stone-300 text-stone-700 hover:bg-stone-100"
-                          }`}
-                        >
-                          {memory.cover_image_path === item.file_path
-                            ? currentLang === "en"
-                              ? "Selected Cover"
-                              : "Seçili Kapak"
-                            : currentLang === "en"
-                            ? "Set as Cover"
-                            : "Kapak Yap"}
-                        </button>
-                      </form>
-
-                      <div className="rounded-2xl border border-stone-200 bg-white p-4">
-                        <div className="mb-3">
-                          <p className="text-sm font-medium text-stone-800">
-                            {currentLang === "en" ? "Photo location" : "Fotoğraf konumu"}
-                          </p>
-                          <p className="mt-1 text-xs leading-5 text-stone-500">
-                            {item.location_name
-                              ? item.location_name
-                              : currentLang === "en"
-                              ? "No location added yet. You can add it later."
-                              : "Henüz konum eklenmedi. Sonradan ekleyebilirsin."}
-                          </p>
-                        </div>
-                        <OSMLocationPicker />
-                      </div>
-
-                      {memory.cover_image_path === item.file_path && (
-                        <form
-                          action={`/api/magnets/${code}/set-cover-position`}
-                          method="POST"
-                          className="rounded-2xl border border-stone-200 bg-white p-4"
-                        >
-                          <div className="mb-3 flex items-center justify-between gap-4">
-                            <div>
-                              <p className="text-sm font-medium text-stone-800">
-                                {currentLang === "en" ? "Cover framing" : "Kapak kadrajı"}
-                              </p>
-                              <p className="text-xs text-stone-500">
-                                {currentLang === "en"
-                                  ? "Move the focus up or down."
-                                  : "Görünen alanı yukarı veya aşağı taşı."}
-                              </p>
+                        <div className="mt-3 space-y-3">
+                          {isImage ? (
+                            <div className="flex flex-wrap gap-2">
+                              <form action={`/api/magnets/${code}/set-cover`} method="POST">
+                                <input type="hidden" name="itemId" value={item.id.toString()} />
+                                <button
+                                  type="submit"
+                                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                                    isCover
+                                      ? "bg-stone-900 text-white"
+                                      : "border border-stone-300 text-stone-700 hover:bg-stone-100"
+                                  }`}
+                                >
+                                  {isCover ? ui.selectedCover : ui.setCover}
+                                </button>
+                              </form>
+                              <form action={`/api/magnets/${code}/rotate-item`} method="POST">
+                                <input type="hidden" name="itemId" value={item.id.toString()} />
+                                <button
+                                  type="submit"
+                                  className="rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
+                                >
+                                  ↻ {ui.rotate}
+                                </button>
+                              </form>
                             </div>
+                          ) : null}
 
-                            <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600">
-                              {memory.cover_position_percent ?? 50}%
-                            </span>
+                          {isCover ? (
+                            <form
+                              action={`/api/magnets/${code}/set-cover-position`}
+                              method="POST"
+                              className="rounded-2xl border border-stone-200 bg-white p-4"
+                            >
+                              <div className="mb-2 flex items-center justify-between gap-4">
+                                <div>
+                                  <p className="text-sm font-medium text-stone-800">{ui.coverFraming}</p>
+                                  <p className="text-xs text-stone-500">{ui.coverFramingHint}</p>
+                                </div>
+                                <span className="rounded-full bg-stone-100 px-3 py-1 text-xs text-stone-600">
+                                  {memory.cover_position_percent ?? 50}%
+                                </span>
+                              </div>
+                              <input
+                                type="range"
+                                name="positionPercent"
+                                min="0"
+                                max="100"
+                                step="1"
+                                defaultValue={memory.cover_position_percent ?? 50}
+                                className="w-full accent-stone-900"
+                              />
+                              <div className="mt-1 flex justify-between text-xs text-stone-400">
+                                <span>{ui.top}</span>
+                                <span>{ui.center}</span>
+                                <span>{ui.bottom}</span>
+                              </div>
+                              <button type="submit" className="mt-3 rounded-full bg-stone-900 px-4 py-2 text-xs font-medium text-white transition hover:opacity-90">
+                                {ui.saveFraming}
+                              </button>
+                            </form>
+                          ) : null}
+
+                          <div className="rounded-2xl border border-stone-200 bg-white p-4">
+                            <p className="mb-1 text-sm font-medium text-stone-800">{ui.location}</p>
+                            <p className="mb-2 text-xs leading-5 text-stone-500">
+                              {item.location_name
+                                ? item.location_name
+                                : en
+                                ? "No location added yet."
+                                : "Henüz konum eklenmedi."}
+                            </p>
+                            <OSMLocationPicker
+                              code={code}
+                              itemId={item.id.toString()}
+                              lang={currentLang}
+                              initialLocationName={item.location_name}
+                              initialLatitude={item.latitude ? String(item.latitude) : null}
+                              initialLongitude={item.longitude ? String(item.longitude) : null}
+                            />
                           </div>
-
-                          <input
-                            type="range"
-                            name="positionPercent"
-                            min="0"
-                            max="100"
-                            step="1"
-                            defaultValue={memory.cover_position_percent ?? 50}
-                            className="w-full accent-stone-900"
-                          />
-
-                          <div className="mt-2 flex justify-between text-xs text-stone-400">
-                            <span>{currentLang === "en" ? "Top" : "Üst"}</span>
-                            <span>{currentLang === "en" ? "Center" : "Orta"}</span>
-                            <span>{currentLang === "en" ? "Bottom" : "Alt"}</span>
-                          </div>
-
-                          <button
-                            type="submit"
-                            className="mt-4 rounded-full bg-stone-900 px-4 py-2 text-xs font-medium text-white transition hover:opacity-90"
-                          >
-                            {currentLang === "en" ? "Save framing" : "Kadrajı Kaydet"}
-                          </button>
-                        </form>
-                      )}
-                    </div>
-                  ) : item.item_type === "video" && item.signedUrl ? (
-                    <div className="space-y-3">
-                      <video
-                        controls
-                        playsInline
-                        className="w-full rounded-2xl border border-stone-200"
-                        src={item.signedUrl}
-                      />
-                      <VideoTrimButton
-                        videoUrl={item.signedUrl}
-                        itemId={item.id.toString()}
-                        code={code}
-                        lang={currentLang}
-                      />
-
-                      <form action={`/api/magnets/${code}/update-item-description`} method="POST" className="rounded-2xl border border-stone-200 bg-white p-4">
-                        <input type="hidden" name="itemId" value={item.id.toString()} />
-                        <label className="block text-sm font-medium text-stone-800">
-                          {currentLang === "en" ? "Description" : "Açıklama"}
-                        </label>
-                        <p className="mt-0.5 text-xs text-stone-400">
-                          {currentLang === "en"
-                            ? "A short note shown below the video."
-                            : "Videonun altında görünen kısa not."}
-                        </p>
-                        <textarea
-                          name="description"
-                          rows={2}
-                          defaultValue={item.content_text || ""}
-                          placeholder={currentLang === "en" ? "e.g. Our road trip highlight…" : "Örn. Yol yolculuğumuzun öne çıkanı…"}
-                          className="mt-2 w-full resize-none rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-stone-500"
-                        />
-                        <button type="submit" className="mt-2 rounded-full bg-stone-900 px-4 py-2 text-sm font-medium text-white">
-                          {currentLang === "en" ? "Save description" : "Açıklamayı kaydet"}
-                        </button>
-                      </form>
-
-                      <div className="rounded-2xl border border-stone-200 bg-white p-4">
-                        <div className="mb-3">
-                          <p className="text-sm font-medium text-stone-800">
-                            {currentLang === "en" ? "Video location" : "Video konumu"}
-                          </p>
-                          <p className="mt-1 text-xs leading-5 text-stone-500">
-                            {item.location_name
-                              ? item.location_name
-                              : currentLang === "en"
-                              ? "No location added yet."
-                              : "Henüz konum eklenmedi."}
-                          </p>
                         </div>
-                        <OSMLocationPicker />
+                      </details>
+                    ) : null}
+
+                    {isVideo && item.signedUrl ? (
+                      <div className="mt-3">
+                        <VideoTrimButton
+                          videoUrl={item.signedUrl}
+                          itemId={item.id.toString()}
+                          code={code}
+                          lang={currentLang}
+                        />
                       </div>
-                    </div>
-                    ) : item.item_type === "audio" && item.signedUrl ? (
-                      <audio
-                        controls
-                        className="w-full"
-                        src={item.signedUrl}
-                      />
-                    ) : item.content_text ? (
-                      <p className="text-sm leading-7 text-stone-700">
-                        {item.content_text}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-stone-500">
-                        {ui.contentPreviewNotReady}
-                      </p>
-                    )}
-
-                    <div className="mt-4 flex flex-wrap gap-3">
-                      <form action={`/api/magnets/${code}/move-item`} method="POST">
-                        <input type="hidden" name="itemId" value={item.id.toString()} />
-                        <input type="hidden" name="direction" value="top" />
-                        <button
-                          type="submit"
-                          className="rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
-                        >
-                          {currentLang === "en" ? "↑ Move to Top" : "↑ En Üste Taşı"}
-                        </button>
-                      </form>
-
-                      <form action={`/api/magnets/${code}/move-item`} method="POST">
-                        <input type="hidden" name="itemId" value={item.id.toString()} />
-                        <input type="hidden" name="direction" value="up" />
-                        <button
-                          type="submit"
-                          className="rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
-                        >
-                          {ui.moveUp}
-                        </button>
-                      </form>
-
-                      <form action={`/api/magnets/${code}/move-item`} method="POST">
-                        <input type="hidden" name="itemId" value={item.id.toString()} />
-                        <input type="hidden" name="direction" value="down" />
-                        <button
-                          type="submit"
-                          className="rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-100"
-                        >
-                          {ui.moveDown}
-                        </button>
-                      </form>
-
-                      <form action={`/api/magnets/${code}/delete-item`} method="POST">
-                        <input type="hidden" name="itemId" value={item.id.toString()} />
-                        <button
-                          type="submit"
-                          className="rounded-full border border-red-300 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
-                        >
-                          {ui.delete}
-                        </button>
-                      </form>
-                    </div>
+                    ) : null}
                   </article>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-stone-300 p-6 text-center">
-                <p className="text-sm text-stone-600">
-                  {ui.noContent}
-                </p>
-              </div>
-            )}
-          </section>
-        </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-stone-300 p-6 text-center">
+              <p className="text-sm text-stone-600">{ui.noContent}</p>
+            </div>
+          )}
+        </section>
       </section>
-    </section>
-    <ScrollPreserver />
-    <DragSort code={code} />
-  </main>
+
+      <ScrollPreserver />
+      <DragSort code={code} />
+    </main>
   );
 }
