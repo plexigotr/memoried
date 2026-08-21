@@ -22,19 +22,34 @@
     <div class="rte">{{ product.description }}</div>
     {% form 'product', product, class: 'memoried-product-form memoried-checkout-card' %}
       <p class="memoried-checkout-title">Paketini seç</p>
-      <label for="MemoriedVariant-{{ section.id }}">Paket</label>
-      <select id="MemoriedVariant-{{ section.id }}" name="id" data-variant-selector>
+      <fieldset class="memoried-package-options">
+        <legend class="visually-hidden">Paket seçenekleri</legend>
         {% for variant in product.variants %}
-          <option
-            value="{{ variant.id }}"
-            data-price="{{ variant.price | money }}"
-            {% if variant == product.selected_or_first_available_variant %}selected{% endif %}
-            {% unless variant.available %}disabled{% endunless %}
-          >
-            {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} — Tükendi{% endunless %}
-          </option>
+          <label class="memoried-package-option{% if variant == product.selected_or_first_available_variant %} is-selected{% endif %}">
+            <input
+              type="radio"
+              name="id"
+              value="{{ variant.id }}"
+              data-variant-option
+              data-price="{{ variant.price | money }}"
+              {% if variant == product.selected_or_first_available_variant %}checked{% endif %}
+              {% unless variant.available %}disabled{% endunless %}
+            >
+            <span class="memoried-package-option-copy">
+              <span class="memoried-package-option-heading">
+                <strong>{{ variant.title }}</strong>
+                <b>{{ variant.price | money }}</b>
+              </span>
+              {% if variant.title contains 'Premium' %}
+                <small>50 fotoğraf · 10 kısa video · Sınırsız metin ve ses kaydı</small>
+              {% else %}
+                <small>10 fotoğraf · 1 kısa video · Sınırsız metin ve ses kaydı</small>
+              {% endif %}
+              {% unless variant.available %}<em>Tükendi</em>{% endunless %}
+            </span>
+          </label>
         {% endfor %}
-      </select>
+      </fieldset>
 
       <label for="MemoriedEngraving-{{ section.id }}">
         Magnet üzerindeki yazı
@@ -48,18 +63,6 @@
         placeholder="Örn. Bizim Hikâyemiz"
         required
       >
-
-      <label for="MemoriedGiftNote-{{ section.id }}">
-        Hediye notu
-        <small>(isteğe bağlı)</small>
-      </label>
-      <textarea
-        id="MemoriedGiftNote-{{ section.id }}"
-        name="properties[Hediye notu]"
-        maxlength="250"
-        rows="3"
-        placeholder="Paketin içine eklenmesini istediğin not"
-      ></textarea>
 
       <label class="gift-check" for="MemoriedGiftPackage-{{ section.id }}">
         <input

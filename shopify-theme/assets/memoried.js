@@ -31,4 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
       price.textContent = option.dataset.price || '';
     });
   });
+
+  document.querySelectorAll('[data-variant-option]').forEach((option) => {
+    option.addEventListener('change', () => {
+      const form = option.closest('form');
+      if (!form) return;
+      form.querySelectorAll('.memoried-package-option').forEach((card) => {
+        card.classList.toggle('is-selected', card.contains(option));
+      });
+      const price = form.querySelector('[data-product-price]');
+      if (price) price.textContent = option.dataset.price || '';
+    });
+  });
 });

@@ -79,26 +79,45 @@
 }
 
 .memoried-product-form label small { color: var(--muted); font-weight: 500; }
-.memoried-product-form textarea {
-  width: 100%;
-  min-height: 94px;
-  padding: 16px 17px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, .72);
-  color: var(--ink);
-  font: inherit;
-  line-height: 1.5;
-  resize: vertical;
-}
 .memoried-product-form select:focus,
-.memoried-product-form input[type="text"]:focus,
-.memoried-product-form textarea:focus {
+.memoried-product-form input[type="text"]:focus {
   outline: 2px solid rgba(200, 137, 61, .32);
   outline-offset: 2px;
   border-color: var(--accent);
 }
 .memoried-product-form .button[disabled] { cursor: not-allowed; opacity: .55; }
+
+.memoried-package-options {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.memoried-package-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .62);
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.memoried-package-option:hover { background: rgba(255, 255, 255, .82); }
+.memoried-package-option.is-selected {
+  border-color: var(--accent);
+  background: rgba(255, 250, 243, .92);
+  box-shadow: 0 0 0 3px rgba(200, 137, 61, .13);
+}
+.memoried-package-option input { flex: 0 0 auto; margin: 4px 0 0; accent-color: var(--accent); }
+.memoried-package-option-copy { display: grid; flex: 1; gap: 6px; min-width: 0; }
+.memoried-package-option-heading { display: flex; justify-content: space-between; gap: 14px; }
+.memoried-package-option-heading strong { font-size: 14px; }
+.memoried-package-option-heading b { white-space: nowrap; font-family: Georgia, serif; font-size: 17px; font-weight: 500; }
+.memoried-package-option-copy small { color: var(--muted); font-size: 11px; line-height: 1.55; }
+.memoried-package-option-copy em { color: #9a3b32; font-size: 10px; font-style: normal; font-weight: 750; }
 
 .memoried-checkout-card {
   display: grid;
