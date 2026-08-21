@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getAccountPhone } from "@/lib/auth";
+import { memoryPlanLimits } from "@/lib/memoryPlan";
 
 export default async function AccountPage() {
   const finalPhone = await getAccountPhone();
@@ -60,10 +61,7 @@ export default async function AccountPage() {
     );
   }
 
-  const isPremium =
-    user.plan_type === "premium" &&
-    user.premium_until &&
-    user.premium_until > new Date();
+  const accountPlan = memoryPlanLimits(user);
 
   return (
     <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
@@ -81,15 +79,12 @@ export default async function AccountPage() {
             <div className="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 shadow-sm">
               Plan:{" "}
               <strong>
-                {isPremium ? "Premium" : "Ücretsiz"}
+                {accountPlan.plan === "premium"
+                  ? "Premium"
+                  : accountPlan.plan === "starter"
+                    ? "Starter"
+                    : "Eski Plan"}
               </strong>
-
-              {isPremium && user.premium_until && (
-                <p className="mt-2 text-xs text-stone-500">
-                  Premium bitiş tarihi:{" "}
-                  {new Date(user.premium_until).toLocaleDateString("tr-TR")}
-                </p>
-              )}
             </div>
 
             <form action="/api/account/logout" method="POST">

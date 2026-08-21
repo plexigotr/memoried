@@ -54,6 +54,9 @@ async function activateMagnet(code: string, formData: FormData) {
     where: {
       magnet_code: code,
     },
+    include: {
+      order: true,
+    },
   });
 
   if (!magnet) {
@@ -71,6 +74,19 @@ async function activateMagnet(code: string, formData: FormData) {
   }
 
   await prisma.$transaction(async (tx) => {
+    const orderPlan = magnet.order?.package_type === "premium" ? "premium" : "starter";
+    const shouldKeepPremium = accountUser.plan_type === "premium" && orderPlan !== "premium";
+
+    await tx.users.update({
+      where: { id: accountUser.id },
+      data: shouldKeepPremium
+        ? {}
+        : {
+            plan_type: orderPlan,
+            premium_until: orderPlan === "premium" ? new Date("2099-12-31T23:59:59Z") : null,
+          },
+    });
+
     await tx.memories.create({
     data: {
       user_id: accountUser.id,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { memoryPlanLimits } from "@/lib/memoryPlan";
 import { mediaObjectExists } from "@/lib/storage";
 
 type RouteContext = {
@@ -50,12 +51,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       (item) => item.item_type === "video"
     ).length;
 
-    const isPremium =
-      magnet.user?.plan_type === "premium" &&
-      magnet.user?.premium_until &&
-      magnet.user.premium_until > new Date();
-
-    const maxVideos = isPremium ? 10 : 1;
+    const { videoLimit: maxVideos } = memoryPlanLimits(magnet.user);
 
     if (videoCount >= maxVideos) {
       return NextResponse.json({ error: "video-limit" }, { status: 403 });

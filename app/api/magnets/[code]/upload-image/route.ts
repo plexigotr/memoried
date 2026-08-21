@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { memoryPlanLimits } from "@/lib/memoryPlan";
 import { uploadMediaObject } from "@/lib/storage";
 import sharp from "sharp";
 
@@ -63,12 +64,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       (item) => item.item_type === "image"
     ).length;
 
-    const isPremium =
-      magnet.user?.plan_type === "premium" &&
-      magnet.user?.premium_until &&
-      magnet.user.premium_until > new Date();
-
-    const maxPhotos = isPremium ? 30 : 10;
+    const { imageLimit: maxPhotos } = memoryPlanLimits(magnet.user);
 
     if (imageCount >= maxPhotos) {
       return NextResponse.redirect(

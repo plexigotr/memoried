@@ -2,6 +2,25 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  async redirects() {
+    return [
+      {
+        source: "/shop",
+        destination: "https://memoried.me/products/memoried-stone",
+        permanent: true,
+      },
+      {
+        source: "/order",
+        destination: "https://memoried.me/products/memoried-stone",
+        permanent: true,
+      },
+      {
+        source: "/checkout/:orderCode",
+        destination: "https://memoried.me/products/memoried-stone",
+        permanent: true,
+      },
+    ];
+  },
   turbopack: {
     root: __dirname,
   },

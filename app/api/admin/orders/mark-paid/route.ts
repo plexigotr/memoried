@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { assignAvailableMagnet } from "@/lib/orderFulfillment";
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,13 +18,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.redirect(new URL("/admin?error=order-missing", req.url), 303);
     }
 
-    await prisma.orders.update({
-      where: {
-        order_code: orderCode,
-      },
-      data: {
-        status: "paid",
-      },
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.orders.update({
+        where: { order_code: orderCode },
+        data: { status: "paid" },
+      });
+
+      await assignAvailableMagnet(tx, order.id);
     });
 
     return NextResponse.redirect(new URL("/admin?success=order-paid", req.url), 303);

@@ -38,6 +38,7 @@ export type ShopifyOrderWebhook = {
   } | null;
   email?: string | null;
   financial_status?: string | null;
+  fulfillment_status?: string | null;
   id?: number | string | null;
   line_items?: ShopifyLineItem[] | null;
   name?: string | null;

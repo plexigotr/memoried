@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { assignAvailableMagnet } from "@/lib/orderFulfillment";
 import {
   shopifyOrderData,
   type ShopifyOrderWebhook,
@@ -19,10 +20,24 @@ export async function POST(request: Request) {
     const payload = JSON.parse(rawBody) as ShopifyOrderWebhook;
     const data = shopifyOrderData(payload);
 
-    await prisma.orders.upsert({
-      where: { order_code: data.order_code },
-      create: data,
-      update: data,
+    await prisma.$transaction(async (tx) => {
+      const order = await tx.orders.upsert({
+        where: { order_code: data.order_code },
+        create: {
+          ...data,
+          fulfillment_status: data.status === "paid" ? "awaiting_magnet" : "waiting_payment",
+        },
+        update: data,
+      });
+
+      if (payload.fulfillment_status === "fulfilled") {
+        await tx.orders.update({
+          where: { id: order.id },
+          data: { fulfillment_status: "shipped" },
+        });
+      } else if (data.status === "paid") {
+        await assignAvailableMagnet(tx, order.id);
+      }
     });
 
     return NextResponse.json({ ok: true });

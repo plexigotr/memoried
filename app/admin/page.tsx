@@ -11,6 +11,19 @@ type AdminPageProps = {
   }>;
 };
 
+function fulfillmentLabel(status: string) {
+  if (status === "shipped") return "Kargolandı";
+  if (status === "ready_to_ship") return "Kargoya hazır";
+  if (status === "preparing") return "Hazırlanıyor";
+  if (status === "awaiting_magnet") return "Magnet bekliyor";
+  return "Ödeme bekleniyor";
+}
+
+function shopifyOrderUrl(orderCode: string) {
+  const orderId = orderCode.startsWith("SHP-") ? orderCode.slice(4) : "";
+  return orderId ? `https://admin.shopify.com/store/memoried/orders/${orderId}` : null;
+}
+
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const { error, success } = await searchParams;
 
@@ -36,10 +49,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     });
 
     const orders = await prisma.orders.findMany({
+      include: { magnet: true },
       orderBy: {
         created_at: "desc",
       },
-    });    
+    });
+
+    const preparationOrders = orders.filter(
+      (order) => order.status === "paid" && order.fulfillment_status !== "shipped",
+    );
 
   return (
     <main className="min-h-screen bg-stone-50 px-6 py-12 text-stone-900">
@@ -64,6 +82,30 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           {success === "order-paid" && (
             <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
               Sipariş ödendi olarak işaretlendi.
+            </div>
+          )}
+
+          {success === "magnet-assigned" && (
+            <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              Boş magnet siparişe başarıyla ayrıldı.
+            </div>
+          )}
+
+          {success === "no-magnet" && (
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-700">
+              Ayrılabilecek boş magnet bulunamadı. Önce yeni magnet kodu oluşturun.
+            </div>
+          )}
+
+          {success === "order-ready" && (
+            <div className="mb-6 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              Sipariş kargoya hazır olarak işaretlendi.
+            </div>
+          )}
+
+          {(error === "magnet-assign-failed" || error === "order-ready-failed" || error === "order-not-ready") && (
+            <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              Kargo hazırlık işlemi tamamlanamadı. Sipariş ve boş magnet durumunu kontrol edin.
             </div>
           )}
 
@@ -173,12 +215,77 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
           </form>
         </section>
 
+        <section className="mb-8 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-medium">Kargo Hazırlama</h2>
+              <p className="mt-1 text-sm text-stone-500">
+                Ödemesi alınan Shopify siparişleri ve ayrılan NFC magnet kodları.
+              </p>
+            </div>
+            <span className="rounded-full bg-stone-100 px-4 py-2 text-xs text-stone-600">
+              Hazırlanacak: {preparationOrders.length}
+            </span>
+          </div>
+
+          {preparationOrders.length > 0 ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {preparationOrders.map((order) => {
+                const shopifyUrl = shopifyOrderUrl(order.order_code);
+                return (
+                  <article key={order.id.toString()} className="rounded-2xl border border-stone-200 p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-stone-400">{order.order_code}</p>
+                        <h3 className="mt-2 text-lg font-medium">{order.customer_name}</h3>
+                        <p className="mt-1 text-sm text-stone-500">{order.phone_number}</p>
+                      </div>
+                      <span className="rounded-full bg-amber-50 px-3 py-1 text-xs font-medium text-amber-700">
+                        {fulfillmentLabel(order.fulfillment_status)}
+                      </span>
+                    </div>
+
+                    <dl className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                      <div><dt className="text-stone-400">Paket</dt><dd className="mt-1 font-medium">{order.package_type === "premium" ? "Premium" : "Starter"}</dd></div>
+                      <div><dt className="text-stone-400">Magnet kodu</dt><dd className="mt-1 font-medium">{order.magnet?.magnet_code || "Henüz ayrılmadı"}</dd></div>
+                      <div className="col-span-2"><dt className="text-stone-400">Magnet yazısı</dt><dd className="mt-1 font-medium">{order.custom_text || "-"}</dd></div>
+                    </dl>
+
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {!order.magnet_id ? (
+                        <form action="/api/admin/orders/assign-magnet" method="POST">
+                          <input type="hidden" name="orderCode" value={order.order_code} />
+                          <button className="rounded-full bg-stone-900 px-4 py-2 text-xs font-medium text-white">Boş Magnet Ata</button>
+                        </form>
+                      ) : order.fulfillment_status === "preparing" ? (
+                        <form action="/api/admin/orders/mark-ready" method="POST">
+                          <input type="hidden" name="orderCode" value={order.order_code} />
+                          <button className="rounded-full bg-green-600 px-4 py-2 text-xs font-medium text-white">Kargoya Hazır</button>
+                        </form>
+                      ) : null}
+                      {shopifyUrl ? (
+                        <a href={shopifyUrl} target="_blank" rel="noreferrer" className="rounded-full border border-stone-300 px-4 py-2 text-xs font-medium text-stone-700">
+                          Shopify Siparişini Aç
+                        </a>
+                      ) : null}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 p-6 text-center text-sm text-stone-500">
+              Şu anda hazırlanmayı bekleyen sipariş yok.
+            </p>
+          )}
+        </section>
+
         <details className="mb-8 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl font-medium">Sipariş Yönetimi</h2>
+            <h2 className="text-xl font-medium">Sipariş Geçmişi</h2>
             <p className="mt-1 text-sm text-stone-500">
-              Shopier ödemelerini kontrol ettikten sonra siparişi manuel olarak ödendi yapabilirsin.
+              Shopify ve iyzico siparişlerinin ödeme ve hazırlık durumları.
             </p>
           </div>
 
@@ -207,6 +314,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                     <th className="px-4 py-3">Hediye</th>
                     <th className="px-4 py-3">Tutar</th>
                     <th className="px-4 py-3">Durum</th>
+                    <th className="px-4 py-3">Magnet</th>
+                    <th className="px-4 py-3">Hazırlık</th>
                     <th className="px-4 py-3">Tarih</th>
                     <th className="px-4 py-3">İşlem</th>
                   </tr>
@@ -226,7 +335,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       <td className="px-4 py-4 text-stone-700">
                         {order.package_type === "premium"
                           ? "Premium Paket"
-                          : "Başlangıç Paketi"}
+                          : "Starter Paket"}
                       </td>
 
                       <td className="px-4 py-4 text-stone-700">
@@ -263,6 +372,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                             Bekliyor
                           </span>
                         )}
+                      </td>
+
+                      <td className="px-4 py-4 text-stone-700">
+                        {order.magnet?.magnet_code || "-"}
+                      </td>
+
+                      <td className="px-4 py-4 text-stone-700">
+                        {fulfillmentLabel(order.fulfillment_status)}
                       </td>
 
                       <td className="px-4 py-4 text-stone-600">
@@ -379,9 +496,11 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                       <td className="px-4 py-4 text-stone-700">
                         {magnet.user?.plan_type === "premium"
                           ? "Premium"
-                          : magnet.user
-                          ? "Ücretsiz"
-                          : "-"}
+                          : magnet.user?.plan_type === "starter"
+                            ? "Starter"
+                            : magnet.user
+                              ? "Eski Plan"
+                              : "-"}
                       </td>
 
                       <td className="px-4 py-4 text-stone-700">

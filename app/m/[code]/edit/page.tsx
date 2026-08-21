@@ -12,6 +12,7 @@ import DragSort from "@/components/DragSort";
 import { hasEditSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import OSMLocationPicker from '@/components/OSMLocationPicker';
+import { memoryPlanLimits } from "@/lib/memoryPlan";
 
 type EditPageProps = {
   params: Promise<{ code: string }>;
@@ -85,15 +86,17 @@ export default async function EditPage({
     backToStory: currentLang === "en" ? "Back to Story" : "Story Sayfasına Dön",
     planLabel: currentLang === "en" ? "Your Plan" : "Planın",
     freePlan: currentLang === "en" ? "Free" : "Ücretsiz",
+    starterPlan: "Starter",
     premiumPlan: "Premium",
     freePlanText:
       currentLang === "en"
         ? "You can upload 10 photos and 1 video."
         : "10 fotoğraf, 1 video hakkın var.",
+    starterPlanText: currentLang === "en" ? "20 photos, 2 videos." : "20 fotoğraf, 2 video hakkın var.",
     premiumPlanText:
       currentLang === "en"
-        ? "You can upload 30 photos and 10 videos."
-        : "30 fotoğraf, 10 video hakkın var.",
+        ? "You can upload 50 photos and 10 videos."
+        : "50 fotoğraf, 10 video hakkın var.",
     upgrade:
       currentLang === "en" ? "Upgrade Plan 🚀" : "Paketi Yükselt 🚀",
     upgradedSuccess:
@@ -194,13 +197,11 @@ export default async function EditPage({
     (item) => item.item_type === "video"
   ).length;
 
-  const isPremium =
-    magnet.user?.plan_type === "premium" &&
-    magnet.user?.premium_until &&
-    magnet.user.premium_until > new Date();
-
-  const imageLimit = isPremium ? 30 : 10;
-  const videoLimit = isPremium ? 10 : 1;
+  const planLimits = memoryPlanLimits(magnet.user);
+  const isPremium = planLimits.plan === "premium";
+  const isStarter = planLimits.plan === "starter";
+  const imageLimit = planLimits.imageLimit;
+  const videoLimit = planLimits.videoLimit;
 
   const itemsWithUrls = await Promise.all(
     memory.memory_items.map(async (item) => {
@@ -267,10 +268,10 @@ export default async function EditPage({
                   {ui.planLabel}
                 </p>
                 <p className="text-2xl font-semibold text-stone-900">
-                  {isPremium ? ui.premiumPlan : ui.freePlan}
+                  {isPremium ? ui.premiumPlan : isStarter ? ui.starterPlan : ui.freePlan}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-stone-500">
-                  {isPremium ? ui.premiumPlanText : ui.freePlanText}
+                  {isPremium ? ui.premiumPlanText : isStarter ? ui.starterPlanText : ui.freePlanText}
                 </p>
 
                 {isPremium && magnet.user?.premium_until && (
