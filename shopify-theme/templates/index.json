@@ -6,7 +6,9 @@
     },
     "product": {
       "type": "memoried-featured-product",
-      "settings": {}
+      "settings": {
+        "product": "memoried-stone"
+      }
     },
     "story": {
       "type": "memoried-story",

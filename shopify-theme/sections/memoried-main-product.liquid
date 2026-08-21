@@ -1,42 +1,57 @@
 <section class="main-product-shell">
-  <div class="main-product-media">
-    {% if product.featured_media %}
-      {{ product.featured_media | image_url: width: 1400 | image_tag: loading: 'eager', alt: product.title }}
-    {% else %}
-      <img src="{{ 'magnet.png' | asset_url }}" alt="{{ product.title | escape }}" width="1200" height="1200">
-    {% endif %}
+  <div class="main-product-gallery">
+    <div class="main-product-media">
+      {% if product.featured_media %}
+        {{ product.featured_media | image_url: width: 1400 | image_tag: loading: 'eager', alt: product.title }}
+      {% else %}
+        <img src="{{ 'magnet.png' | asset_url }}" alt="{{ product.title | escape }}" width="1200" height="1200">
+      {% endif %}
+    </div>
+    <div class="product-info-visual">
+      <img src="{{ 'memoried-shop-info.png' | asset_url }}" alt="Memoried Stone özellikleri ve kullanım adımları" width="1365" height="2048" loading="lazy">
+    </div>
   </div>
   <div class="main-product-copy">
     <p class="eyebrow">DOĞAL TAŞ ANI MAGNETİ</p>
     <h1>{{ product.title }}</h1>
+    <div class="product-assurances" aria-label="Ürün avantajları">
+      <span>Türkiye'ye ücretsiz kargo</span>
+      <span>3 iş gününde kargoda</span>
+      <span>Pil gerektirmez</span>
+    </div>
     <div class="rte">{{ product.description }}</div>
-    {% form 'product', product, class: 'memoried-product-form' %}
-      {% unless product.has_only_default_variant %}
-        <label for="Variant-{{ section.id }}">Paketini seç</label>
-        <select id="Variant-{{ section.id }}" name="id">
-          {% for variant in product.variants %}
-            <option value="{{ variant.id }}" {% if variant == product.selected_or_first_available_variant %}selected{% endif %} {% unless variant.available %}disabled{% endunless %}>
-              {{ variant.title }} — {{ variant.price | money }}
-            </option>
-          {% endfor %}
-        </select>
-      {% else %}
-        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-      {% endunless %}
-
-      <label for="Engraving-{{ section.id }}">Magnet üzerindeki yazı</label>
-      <input id="Engraving-{{ section.id }}" type="text" name="properties[Magnet üzerindeki yazı]" maxlength="24" placeholder="HATIRLA.">
-
-      <label class="gift-check">
-        <input type="checkbox" name="properties[Hediye paketi]" value="Evet">
-        <span><strong>Hediye paketi istiyorum</strong><small>Özenle hazırlanmış hediye paketiyle gönderilsin.</small></span>
-      </label>
-
-      <button class="button button-dark button-wide" type="submit" {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %}>
-        {% if product.selected_or_first_available_variant.available %}Sepete Ekle · {{ product.selected_or_first_available_variant.price | money }}{% else %}Tükendi{% endif %}
-      </button>
-    {% endform %}
-    <div class="trust-row"><span>Güvenli ödeme</span><span>Özenli paketleme</span><span>Kişisel anı sayfası</span></div>
+    <div class="memoried-checkout-card">
+      <p class="memoried-checkout-title">Paket seçenekleri</p>
+      <div class="memoried-package-list">
+        {% for variant in product.variants %}
+          <div class="memoried-package-row">
+            <strong>{{ variant.title }}</strong>
+            <span>{{ variant.price | money }}</span>
+          </div>
+        {% endfor %}
+      </div>
+      <p class="memoried-checkout-copy">Telefon numaranı, paketini ve magnet üzerindeki yazıyı sonraki adımda girebilirsin.</p>
+      <a class="button button-dark button-wide" href="{{ settings.order_app_url | default: 'https://app.memoried.me/order' }}">
+        Sipariş Ver · {{ product.price_min | money }}'den başlayan
+      </a>
+      <small class="memoried-payment-note">Ödeme, güvenli Shopier sayfasında tamamlanır.</small>
+    </div>
+    <div class="memory-after-order">
+      <span class="memory-after-order-number">01</span>
+      <div>
+        <strong>Anılarını siparişten sonra ekle</strong>
+        <p>Fotoğraf, video, mesaj ve konumlarını <a href="{{ settings.memory_app_url | default: 'https://app.memoried.me/account' }}">Anılarım</a> alanından güvenle yükleyebilirsin.</p>
+      </div>
+    </div>
+    <details class="product-detail" open>
+      <summary>Nasıl çalışır?</summary>
+      <p>Siparişinden sonra anı sayfanı oluştur. Telefonunu Memoried Stone'a dokundurduğunda NFC teknolojisi kişisel anı sayfanı açar.</p>
+    </details>
+    <details class="product-detail">
+      <summary>Kargo ve teslimat</summary>
+      <p>Ürün en geç 3 iş günü içinde kargoya teslim edilir. Türkiye gönderimleri ücretsiz, uluslararası gönderimler 900 TL'dir.</p>
+    </details>
+    <div class="trust-row"><span>Özenli paketleme</span><span>Kişisel anı sayfası</span><span>Tüm NFC telefonlarla uyumlu</span></div>
   </div>
 </section>
 

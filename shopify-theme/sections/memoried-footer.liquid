@@ -1,12 +1,39 @@
 <footer class="site-footer">
-  <a class="footer-brand" href="{{ routes.root_url }}">Memoried</a>
-  <p>Anılarını dokunarak yeniden yaşa.</p>
-  <nav aria-label="Alt menü">
-    {% for policy in shop.policies %}
-      {% if policy != blank %}<a href="{{ policy.url }}">{{ policy.title }}</a>{% endif %}
-    {% endfor %}
-  </nav>
-  <small>© {{ 'now' | date: '%Y' }} Memoried</small>
+  <div class="footer-grid">
+    <div class="footer-intro">
+      <a class="footer-brand" href="{{ routes.root_url }}">Memoried</a>
+      <p>Anılarını dokunarak yeniden yaşa.</p>
+    </div>
+    <div>
+      <strong>Keşfet</strong>
+      <nav aria-label="Alt menü">
+        <a href="{{ routes.root_url }}">Ana Sayfa</a>
+        <a href="{{ routes.all_products_collection_url }}">Ürün</a>
+        <a href="{{ routes.root_url }}#nasil-calisir">Nasıl Çalışır?</a>
+        <a href="{{ settings.memory_app_url | default: 'https://app.memoried.me/account' }}">Anılarım</a>
+      </nav>
+    </div>
+    <div>
+      <strong>Destek</strong>
+      <nav aria-label="Politikalar">
+        {% for policy in shop.policies %}
+          {% if policy != blank %}<a href="{{ policy.url }}">{{ policy.title }}</a>{% endif %}
+        {% endfor %}
+      </nav>
+    </div>
+    <div>
+      <strong>İletişim</strong>
+      <nav aria-label="İletişim bilgileri">
+        <a href="mailto:memoried.me@gmail.com">memoried.me@gmail.com</a>
+        <a href="tel:+905073641591">+90 507 364 15 91</a>
+        <span>Bayraklı, İzmir</span>
+      </nav>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <small>© {{ 'now' | date: '%Y' }} Memoried</small>
+    <small>Her dokunuşta bir anlam.</small>
+  </div>
 </footer>
 
 {% schema %}
