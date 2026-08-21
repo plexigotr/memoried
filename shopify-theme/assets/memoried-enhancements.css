@@ -79,6 +79,26 @@
 }
 
 .memoried-product-form label small { color: var(--muted); font-weight: 500; }
+.memoried-product-form textarea {
+  width: 100%;
+  min-height: 94px;
+  padding: 16px 17px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .72);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+.memoried-product-form select:focus,
+.memoried-product-form input[type="text"]:focus,
+.memoried-product-form textarea:focus {
+  outline: 2px solid rgba(200, 137, 61, .32);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+.memoried-product-form .button[disabled] { cursor: not-allowed; opacity: .55; }
 
 .memoried-checkout-card {
   display: grid;

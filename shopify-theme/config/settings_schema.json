@@ -16,11 +16,6 @@
         "label": "Anı hesabı bağlantısı"
       },
       {
-        "type": "url",
-        "id": "order_app_url",
-        "label": "Sipariş ve Shopier bağlantısı"
-      },
-      {
         "type": "color",
         "id": "background",
         "label": "Arka plan",

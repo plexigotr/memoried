@@ -3,8 +3,7 @@
     "background": "#f7f2eb",
     "text": "#241f1b",
     "accent": "#c8893d",
-    "memory_app_url": "https://app.memoried.me/account",
-    "order_app_url": "https://app.memoried.me/order"
+    "memory_app_url": "https://app.memoried.me/account"
   },
   "presets": {
     "Memoried": {}

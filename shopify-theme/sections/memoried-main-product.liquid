@@ -20,22 +20,70 @@
       <span>Pil gerektirmez</span>
     </div>
     <div class="rte">{{ product.description }}</div>
-    <div class="memoried-checkout-card">
-      <p class="memoried-checkout-title">Paket seçenekleri</p>
-      <div class="memoried-package-list">
+    {% form 'product', product, class: 'memoried-product-form memoried-checkout-card' %}
+      <p class="memoried-checkout-title">Paketini seç</p>
+      <label for="MemoriedVariant-{{ section.id }}">Paket</label>
+      <select id="MemoriedVariant-{{ section.id }}" name="id" data-variant-selector>
         {% for variant in product.variants %}
-          <div class="memoried-package-row">
-            <strong>{{ variant.title }}</strong>
-            <span>{{ variant.price | money }}</span>
-          </div>
+          <option
+            value="{{ variant.id }}"
+            data-price="{{ variant.price | money }}"
+            {% if variant == product.selected_or_first_available_variant %}selected{% endif %}
+            {% unless variant.available %}disabled{% endunless %}
+          >
+            {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} — Tükendi{% endunless %}
+          </option>
         {% endfor %}
-      </div>
-      <p class="memoried-checkout-copy">Telefon numaranı, paketini ve magnet üzerindeki yazıyı sonraki adımda girebilirsin.</p>
-      <a class="button button-dark button-wide" href="{{ settings.order_app_url | default: 'https://app.memoried.me/order' }}">
-        Sipariş Ver · {{ product.price_min | money }}'den başlayan
-      </a>
-      <small class="memoried-payment-note">Ödeme, güvenli Shopier sayfasında tamamlanır.</small>
-    </div>
+      </select>
+
+      <label for="MemoriedEngraving-{{ section.id }}">
+        Magnet üzerindeki yazı
+        <small>(en fazla 30 karakter)</small>
+      </label>
+      <input
+        id="MemoriedEngraving-{{ section.id }}"
+        type="text"
+        name="properties[Magnet üzerindeki yazı]"
+        maxlength="30"
+        placeholder="Örn. Bizim Hikâyemiz"
+        required
+      >
+
+      <label for="MemoriedGiftNote-{{ section.id }}">
+        Hediye notu
+        <small>(isteğe bağlı)</small>
+      </label>
+      <textarea
+        id="MemoriedGiftNote-{{ section.id }}"
+        name="properties[Hediye notu]"
+        maxlength="250"
+        rows="3"
+        placeholder="Paketin içine eklenmesini istediğin not"
+      ></textarea>
+
+      <label class="gift-check" for="MemoriedGiftPackage-{{ section.id }}">
+        <input
+          id="MemoriedGiftPackage-{{ section.id }}"
+          type="checkbox"
+          name="properties[Hediye paketi]"
+          value="Evet"
+        >
+        <span>
+          <strong>Hediye paketi istiyorum</strong>
+          <small>Siparişini hediye sunumuyla hazırlayalım.</small>
+        </span>
+      </label>
+
+      <button
+        class="button button-dark button-wide"
+        type="submit"
+        name="add"
+        {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %}
+      >
+        Sepete Ekle · <span data-product-price>{{ product.selected_or_first_available_variant.price | money }}</span>
+      </button>
+      <small class="memoried-payment-note">Telefon ve teslimat bilgilerini güvenli Shopify ödeme ekranında gireceksin. Ödeme iyzico ile alınır.</small>
+    {% endform %}
     <div class="memory-after-order">
       <span class="memory-after-order-number">01</span>
       <div>
