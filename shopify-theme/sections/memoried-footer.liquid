@@ -1,0 +1,17 @@
+<footer class="site-footer">
+  <a class="footer-brand" href="{{ routes.root_url }}">Memoried</a>
+  <p>Anılarını dokunarak yeniden yaşa.</p>
+  <nav aria-label="Alt menü">
+    {% for policy in shop.policies %}
+      {% if policy != blank %}<a href="{{ policy.url }}">{{ policy.title }}</a>{% endif %}
+    {% endfor %}
+  </nav>
+  <small>© {{ 'now' | date: '%Y' }} Memoried</small>
+</footer>
+
+{% schema %}
+{
+  "name": "Memoried alt menü",
+  "settings": []
+}
+{% endschema %}

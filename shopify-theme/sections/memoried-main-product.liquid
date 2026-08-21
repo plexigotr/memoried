@@ -1,0 +1,45 @@
+<section class="main-product-shell">
+  <div class="main-product-media">
+    {% if product.featured_media %}
+      {{ product.featured_media | image_url: width: 1400 | image_tag: loading: 'eager', alt: product.title }}
+    {% else %}
+      <img src="{{ 'magnet.png' | asset_url }}" alt="{{ product.title | escape }}" width="1200" height="1200">
+    {% endif %}
+  </div>
+  <div class="main-product-copy">
+    <p class="eyebrow">DOĞAL TAŞ ANI MAGNETİ</p>
+    <h1>{{ product.title }}</h1>
+    <div class="rte">{{ product.description }}</div>
+    {% form 'product', product, class: 'memoried-product-form' %}
+      {% unless product.has_only_default_variant %}
+        <label for="Variant-{{ section.id }}">Paketini seç</label>
+        <select id="Variant-{{ section.id }}" name="id">
+          {% for variant in product.variants %}
+            <option value="{{ variant.id }}" {% if variant == product.selected_or_first_available_variant %}selected{% endif %} {% unless variant.available %}disabled{% endunless %}>
+              {{ variant.title }} — {{ variant.price | money }}
+            </option>
+          {% endfor %}
+        </select>
+      {% else %}
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+      {% endunless %}
+
+      <label for="Engraving-{{ section.id }}">Magnet üzerindeki yazı</label>
+      <input id="Engraving-{{ section.id }}" type="text" name="properties[Magnet üzerindeki yazı]" maxlength="24" placeholder="HATIRLA.">
+
+      <label class="gift-check">
+        <input type="checkbox" name="properties[Hediye paketi]" value="Evet">
+        <span><strong>Hediye paketi istiyorum</strong><small>Özenle hazırlanmış hediye paketiyle gönderilsin.</small></span>
+      </label>
+
+      <button class="button button-dark button-wide" type="submit" {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %}>
+        {% if product.selected_or_first_available_variant.available %}Sepete Ekle · {{ product.selected_or_first_available_variant.price | money }}{% else %}Tükendi{% endif %}
+      </button>
+    {% endform %}
+    <div class="trust-row"><span>Güvenli ödeme</span><span>Özenli paketleme</span><span>Kişisel anı sayfası</span></div>
+  </div>
+</section>
+
+{% schema %}
+{"name":"Memoried ürün sayfası","settings":[]}
+{% endschema %}

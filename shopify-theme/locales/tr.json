@@ -1,0 +1,5 @@
+{
+  "general": {"continue_shopping": "Alışverişe devam et"},
+  "products": {"product": {"add_to_cart": "Sepete ekle", "sold_out": "Tükendi"}},
+  "cart": {"general": {"title": "Sepetin", "checkout": "Ödemeye geç"}}
+}

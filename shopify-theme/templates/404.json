@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "memoried-404",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

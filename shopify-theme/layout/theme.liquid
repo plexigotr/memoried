@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="theme-color" content="#f7f2eb">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <title>{% if page_title != blank %}{{ page_title }} · {% endif %}{{ shop.name }}</title>
+    {{ content_for_header }}
+    {{ 'memoried.css' | asset_url | stylesheet_tag }}
+    {{ 'memoried-collection.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'memoried.js' | asset_url }}" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#MainContent">İçeriğe geç</a>
+    {% section 'memoried-header' %}
+    <main id="MainContent" tabindex="-1">{{ content_for_layout }}</main>
+    {% section 'memoried-footer' %}
+  </body>
+</html>
