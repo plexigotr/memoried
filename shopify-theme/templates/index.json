@@ -1,0 +1,28 @@
+{
+  "sections": {
+    "hero": {
+      "type": "memoried-hero",
+      "settings": {}
+    },
+    "product": {
+      "type": "memoried-featured-product",
+      "settings": {}
+    },
+    "story": {
+      "type": "memoried-story",
+      "settings": {}
+    },
+    "steps": {
+      "type": "memoried-steps",
+      "settings": {},
+      "blocks": {
+        "step1": {"type":"step","settings":{"title":"Magneti telefonuna dokundur","copy":"NFC veya QR kod ile kişisel anı sayfanı aç."}},
+        "step2": {"type":"step","settings":{"title":"Anı sayfanı oluştur","copy":"Başlığını, kapağını ve hikâyeni birkaç adımda hazırla."}},
+        "step3": {"type":"step","settings":{"title":"Anılarını ekle","copy":"Fotoğraf, kısa video, yazı ve ses kayıtlarını yükle."}},
+        "step4": {"type":"step","settings":{"title":"Her dokunuşta yeniden yaşa","copy":"Magneti okutarak hikâyene istediğin zaman geri dön."}}
+      },
+      "block_order": ["step1", "step2", "step3", "step4"]
+    }
+  },
+  "order": ["hero", "product", "story", "steps"]
+}

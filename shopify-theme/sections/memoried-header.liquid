@@ -1,0 +1,18 @@
+<header class="site-header">
+  <a class="brand" href="{{ routes.root_url }}" aria-label="{{ shop.name }} ana sayfa">
+    <span class="brand-mark">M</span>
+    <span>Memoried</span>
+  </a>
+  <nav class="header-actions" aria-label="Ana menü">
+    <a href="{{ routes.all_products_collection_url }}">Mağaza</a>
+    <a href="{{ settings.memory_app_url | default: 'https://app.memoried.me/account' }}">Anılarım</a>
+    <a class="cart-pill" href="{{ routes.cart_url }}">Sepet <span>{{ cart.item_count }}</span></a>
+  </nav>
+</header>
+
+{% schema %}
+{
+  "name": "Memoried üst menü",
+  "settings": []
+}
+{% endschema %}

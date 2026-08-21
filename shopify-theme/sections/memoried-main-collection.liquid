@@ -1,0 +1,32 @@
+<section class="collection-shell">
+  <p class="eyebrow">MEMORIED KOLEKSİYONU</p>
+  <h1>{{ collection.title | default: 'Anı Magnetleri' }}</h1>
+  {% if collection.description != blank %}<div class="rte">{{ collection.description }}</div>{% endif %}
+  <div class="collection-grid">
+    {% for product in collection.products %}
+      <article class="collection-card">
+        <a href="{{ product.url }}">
+          <div class="collection-image">
+            {% if product.featured_image %}
+              {{ product.featured_image | image_url: width: 900 | image_tag: loading: 'lazy', alt: product.title }}
+            {% else %}
+              <img src="{{ 'magnet.png' | asset_url }}" alt="{{ product.title | escape }}" width="900" height="900" loading="lazy">
+            {% endif %}
+          </div>
+          <p class="eyebrow">DOĞAL TAŞ ANI MAGNETİ</p>
+          <h2>{{ product.title }}</h2>
+          <strong>{{ product.price_min | money }}</strong>
+        </a>
+      </article>
+    {% else %}
+      <div class="empty-collection">
+        <h2>İlk Memoried ürünü hazırlanıyor.</h2>
+        <p>Çok yakında anılarını dokunulabilir bir objeye dönüştürebileceksin.</p>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{"name":"Memoried koleksiyon","settings":[]}
+{% endschema %}

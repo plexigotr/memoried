@@ -1,0 +1,34 @@
+<section class="cart-shell">
+  <p class="eyebrow">MEMORIED</p>
+  <h1>Sepetin</h1>
+  {% if cart.empty? %}
+    <p>Sepetin henüz boş.</p>
+    <a class="button button-dark" href="{{ routes.all_products_collection_url }}">Mağazaya Dön</a>
+  {% else %}
+    <form action="{{ routes.cart_url }}" method="post">
+      <div class="cart-items">
+        {% for item in cart.items %}
+          <article class="cart-item">
+            {% if item.image %}{{ item.image | image_url: width: 240 | image_tag: alt: item.product.title }}{% endif %}
+            <div>
+              <h2><a href="{{ item.url }}">{{ item.product.title }}</a></h2>
+              {% unless item.variant.title == 'Default Title' %}<p>{{ item.variant.title }}</p>{% endunless %}
+              {% for property in item.properties %}{% unless property.last == blank %}<small>{{ property.first }}: {{ property.last }}</small>{% endunless %}{% endfor %}
+              <label>Adet <input type="number" name="updates[]" value="{{ item.quantity }}" min="0"></label>
+            </div>
+            <strong>{{ item.final_line_price | money }}</strong>
+          </article>
+        {% endfor %}
+      </div>
+      <div class="cart-summary">
+        <p><span>Ara toplam</span><strong>{{ cart.total_price | money }}</strong></p>
+        <button class="button button-light" type="submit" name="update">Sepeti Güncelle</button>
+        <button class="button button-dark" type="submit" name="checkout">Güvenli Ödemeye Geç</button>
+      </div>
+    </form>
+  {% endif %}
+</section>
+
+{% schema %}
+{"name":"Memoried sepet","settings":[]}
+{% endschema %}

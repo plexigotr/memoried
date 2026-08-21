@@ -1,0 +1,32 @@
+<section class="story-section">
+  <div class="story-photo-card">
+    {% if section.settings.image != blank %}
+      {{ section.settings.image | image_url: width: 1200 | image_tag: loading: 'lazy', alt: section.settings.heading }}
+    {% else %}
+      <img src="{{ 'memoried-shop-info.png' | asset_url }}" alt="Memoried ürün ayrıntıları" width="1200" height="1200" loading="lazy">
+    {% endif %}
+  </div>
+  <div class="story-copy-card">
+    <p class="eyebrow">DOKUN · HATIRLA · PAYLAŞ</p>
+    <h2>{{ section.settings.heading }}</h2>
+    <p>{{ section.settings.copy }}</p>
+    <ul>
+      <li>Telefonuna dokun — anıların anında açılır</li>
+      <li>Fotoğraf, video, yazı ve ses tek bir yerde</li>
+      <li>Fiziksel bir obje olarak her zaman yanında</li>
+      <li>Unutulmayacak bir hediye deneyimi</li>
+    </ul>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Memoried hikâye alanı",
+  "settings": [
+    {"type":"image_picker","id":"image","label":"Detay görseli"},
+    {"type":"text","id":"heading","label":"Başlık","default":"Bazı anlar kaybolmamalı."},
+    {"type":"textarea","id":"copy","label":"Açıklama","default":"Memoried, sevdiğin anıları fiziksel bir objeye dönüştürür. Fotoğraf, video, yazı ve ses kayıtların tek bir hikâyede saklanır. Magneti telefonuna dokundurduğunda, o ana geri dönersin."}
+  ],
+  "presets": [{"name":"Memoried hikâye alanı"}]
+}
+{% endschema %}

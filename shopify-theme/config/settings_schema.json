@@ -1,0 +1,38 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "Memoried",
+    "theme_version": "1.0.0",
+    "theme_author": "Memoried",
+    "theme_documentation_url": "https://memoried.me",
+    "theme_support_url": "https://memoried.me"
+  },
+  {
+    "name": "Memoried ayarları",
+    "settings": [
+      {
+        "type": "url",
+        "id": "memory_app_url",
+        "label": "Anı hesabı bağlantısı"
+      },
+      {
+        "type": "color",
+        "id": "background",
+        "label": "Arka plan",
+        "default": "#f7f2eb"
+      },
+      {
+        "type": "color",
+        "id": "text",
+        "label": "Metin",
+        "default": "#241f1b"
+      },
+      {
+        "type": "color",
+        "id": "accent",
+        "label": "Vurgu",
+        "default": "#c8893d"
+      }
+    ]
+  }
+]

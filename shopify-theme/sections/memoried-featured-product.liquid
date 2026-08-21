@@ -1,0 +1,48 @@
+{% assign featured = section.settings.product %}
+<section class="product-showcase" id="memoried-product">
+  <div class="product-card">
+    <div class="product-visual">
+      {% if featured != blank and featured.featured_image != blank %}
+        {{ featured.featured_image | image_url: width: 1200 | image_tag: loading: 'eager', alt: featured.title }}
+      {% else %}
+        <img src="{{ 'magnet.png' | asset_url }}" alt="Memoried doğal taş anı magneti" width="1200" height="1200" loading="eager">
+      {% endif %}
+    </div>
+    <div class="product-copy">
+      <div class="product-heading-row">
+        <div>
+          <p class="eyebrow">{{ section.settings.kicker }}</p>
+          <h2>{% if featured != blank %}{{ featured.title }}{% else %}{{ section.settings.title }}{% endif %}</h2>
+        </div>
+        <span class="limited-pill">Limited</span>
+      </div>
+      <p>{{ section.settings.description }}</p>
+      <div class="product-price-row">
+        <div>
+          <small>Başlangıç fiyatı</small>
+          <strong>{% if featured != blank %}{{ featured.price_min | money }}{% else %}₺749,90{% endif %}</strong>
+        </div>
+        <p>Bir kez oluştur.<br>Her dokunuşta yeniden yaşa.</p>
+      </div>
+      {% if featured != blank %}
+        <a class="button button-dark button-wide" href="{{ featured.url }}">Satın Al</a>
+      {% else %}
+        <a class="button button-dark button-wide" href="{{ routes.all_products_collection_url }}">Ürünü İncele</a>
+      {% endif %}
+      <p class="micro-copy">NFC destekli doğal taş magnet ve kişisel anı sayfası</p>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Öne çıkan Memoried ürünü",
+  "settings": [
+    {"type":"product","id":"product","label":"Ürün"},
+    {"type":"text","id":"kicker","label":"Ürün türü","default":"DOĞAL TAŞ ANI MAGNETİ"},
+    {"type":"text","id":"title","label":"Yedek ürün adı","default":"Memoried Stone"},
+    {"type":"textarea","id":"description","label":"Açıklama","default":"Fotoğraf, video, yazı ve ses kayıtlarını tek bir zarif hikâyede saklayan NFC’li anı objesi."}
+  ],
+  "presets": [{"name":"Öne çıkan Memoried ürünü"}]
+}
+{% endschema %}

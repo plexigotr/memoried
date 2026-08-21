@@ -1,0 +1,9 @@
+{
+  "sections": {
+    "main": {
+      "type": "memoried-main-cart",
+      "settings": {}
+    }
+  },
+  "order": ["main"]
+}

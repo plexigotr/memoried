@@ -1,0 +1,34 @@
+<section class="steps-section" id="nasil-calisir">
+  <p class="eyebrow">DÖRT KOLAY ADIM</p>
+  <h2>Nasıl çalışır?</h2>
+  <div class="steps-grid">
+    {% for block in section.blocks %}
+      <article class="step-card" {{ block.shopify_attributes }}>
+        <span>0{{ forloop.index }}</span>
+        <h3>{{ block.settings.title }}</h3>
+        <p>{{ block.settings.copy }}</p>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Nasıl çalışır",
+  "max_blocks": 4,
+  "blocks": [
+    {
+      "type":"step",
+      "name":"Adım",
+      "settings":[
+        {"type":"text","id":"title","label":"Başlık","default":"Magneti telefonuna dokundur"},
+        {"type":"textarea","id":"copy","label":"Açıklama","default":"NFC veya QR kod ile kişisel anı sayfanı aç."}
+      ]
+    }
+  ],
+  "presets": [{
+    "name":"Nasıl çalışır",
+    "blocks":[{"type":"step"},{"type":"step","settings":{"title":"Anı sayfanı oluştur","copy":"Başlığını, kapağını ve hikâyeni birkaç adımda hazırla."}},{"type":"step","settings":{"title":"Anılarını ekle","copy":"Fotoğraf, kısa video, yazı ve ses kayıtlarını yükle."}},{"type":"step","settings":{"title":"Her dokunuşta yeniden yaşa","copy":"Magneti okutarak hikâyene istediğin zaman geri dön."}}]
+  }]
+}
+{% endschema %}
